@@ -1,0 +1,9 @@
+A WZ->lvll VBS resonance selection using neural networks.
+There are two programs:
+      - OPT_VBS.py:
+ Trained with signals and backgrounds, the NN are implemented using the Keras package. They need simple ntuples as inputs containing all the necessary variables like Mjj, Detajj etc. For now the training is performed on mc16d samples. The background is a combination of the SM WZ QCD and WZ EW processes and the signal are the combined GM H5 samples with masses ranging from 200 to 900 GeV.
+
+This is a simple fully connected NN, the principal hyper parameters are the number of layers, number of neurons per layer, the learning rate and momentum. The input is split into a training and validation set (70%/30%). After each epoch the accuracy is measured on the validation set and only the best performance is saved. Each signal mass is assigned a label corresponding to the resonance mass. The background events have a randomnly assigned label, taken of the same probability distribution as the signals. This should allow an optimal performance for all resonance masses.
+
+     - Apply_NN.py:
+This applies the NN selection to a given dataset, for example mc16a datasets. It takes as input the best performing NN found with OPT_VBS.py and a provided dataset. It then creates new samples in the output directory OutputRoot which are identical to the input files as well as an added variable probSignal which is the output of the NN. These ntuples can then be used to select the optimal cut on the NN output.

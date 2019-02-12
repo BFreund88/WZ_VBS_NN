@@ -120,14 +120,14 @@ def prepare_data():
     bkgWZQCD = read_data(filedir+'364253_Sherpa_222_NNPDF30NNLO_lllv_Systematics.root')
     
     #Background WZ EW
-    #bkgWZEW = read_data(filedir+'364284_Sherpa_222_NNPDF30NNLO_lllvjj_EW6_Systematics.root')
+    bkgWZEW = read_data(filedir+'364284_Sherpa_222_NNPDF30NNLO_lllvjj_EW6_Systematics.root')
     
     #Normalize weights and store these in panda data frames
     bkgWZQCD['Weight']=bkgWZQCD['Weight']*lumi*4583./5485580.
-    #bkgWZEW['Weight']=bkgWZEW['Weight']*lumi*47./1471000.
+    bkgWZEW['Weight']=bkgWZEW['Weight']*lumi*47./1471000.
 
-    #bg=bkgWZQCD.append(bkgWZEW)
-    bg=bkgWZQCD
+    bg=bkgWZQCD.append(bkgWZEW)
+    #bg=bkgWZQCD
     bg['Label'] = '0'
 
     #Read signal
