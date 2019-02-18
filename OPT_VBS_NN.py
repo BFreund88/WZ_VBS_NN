@@ -8,6 +8,7 @@ from keras import optimizers
 import sklearn
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import math
 from root_numpy import root2array, tree2array, array2root
 import ROOT
@@ -128,16 +129,16 @@ for loop2 in range(lower,upper):
     s_valid_NN=b_valid_NN=0
 
     for index in range(len(Yhat_train_NN)):
-        if (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_label_train.iloc[index,0]==massindex):
-            s_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/num_train))
+        if (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
+            s_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
         elif (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-            b_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/num_train))
+            b_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
 
     for index in range(len(Yhat_valid_NN)):
-        if (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_label_valid.iloc[index,0]==massindex):
-            s_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/num_valid))
+        if (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
+            s_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
         elif (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-            b_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/num_valid))
+            b_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
 
     print "S and B NN training"
     print s_train_NN

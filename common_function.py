@@ -86,6 +86,9 @@ class dataset:
 
         self.X_train['LabelMass']=train[['LabelMass']]
         self.X_valid['LabelMass']=validation[['LabelMass']]
+
+        self.mass_train_label=train[['LabelMass']]
+        self.mass_valid_label=validation[['LabelMass']]
         #self.X_test['LabelMass']=test[['LabelMass']]
 
         

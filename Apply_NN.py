@@ -35,7 +35,6 @@ def read_data(filepath, X_mean, X_dev, Label):
         label=np.random.choice(7,X.shape[0], p=prob)
         X['LabelMass'] = label
 
-
     data['LabelMass']=X['LabelMass'] 
     return data, X
 
@@ -59,19 +58,16 @@ def analyze_data(filedir,filename,model, X_mean, X_dev, label):
     pred, proba = calculate_pred(model,X)
     save_file(data, pred, proba, filename)
 
-# Model reconstruction from JSON file
-#with open('model_architecture.json', 'r') as f:
-#    model = model_from_json(f.read())
-#Restore Model
+#Restores Model and compiles automatically
 model = load_model('output_NN.h5')
 model.summary()
 
 # Load weights into the new model
-model.load_weights('output_NN.h5')
+#model.load_weights('output_NN.h5')
 
-sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
+#sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
 #ada= optimizers.Adadelta(lr=1, rho=0.95, epsilon=None, decay=0.0)
-model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+#model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
 filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
 filename1= '364253_Sherpa_222_NNPDF30NNLO_lllv_Systematics.root'
