@@ -1,11 +1,7 @@
-import keras
-from keras.utils.np_utils import to_categorical
-from keras.models import Sequential, load_model
-from keras.layers import Dense, Activation, Dropout
-from keras import backend as K
-from keras.optimizers import SGD
-from keras import optimizers
 import sklearn
+from sklearn.externals import joblib
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 import numpy as np
 import pandas as pd
 import math
@@ -16,18 +12,18 @@ from keras.models import model_from_json
 from common_function import read_data_apply
 
 def calculate_pred(model,X):
-    prob_predict=model.predict(X, verbose=False)
-    pcutNN = np.percentile(prob_predict,40.)
-    Yhat=prob_predict[:,1] > pcutNN
+    prob_predict=model.predict_proba(X)
+    pcutNN = 0.5
+    Yhat=prob_predict[:,0] > pcutNN
     return Yhat, prob_predict
 
 def save_file(data, pred, proba, filename):
     data['isSignal'] = pred
     print(filename)
     for index in range(100):
-        print "Proba {}".format(proba[index,:])
-    data['probSignal'] = proba[:,1]
-    array2root(np.array(data.to_records()), 'OutputRoot/new_'+filename, 'nominal', mode='recreate')
+        print "Proba {}".format(proba[index,0])
+    data['probSignal'] = proba[:,0]
+    array2root(np.array(data.to_records()), 'OutputRoot/new_BDT_'+filename, 'nominal', mode='recreate')
     return
 
 def analyze_data(filedir,filename,model, X_mean, X_dev, label):
@@ -36,15 +32,8 @@ def analyze_data(filedir,filename,model, X_mean, X_dev, label):
     save_file(data, pred, proba, filename)
 
 #Restores Model and compiles automatically
-model = load_model('output_NN.h5')
-model.summary()
-
-# Load weights into the new model
-#model.load_weights('output_NN.h5')
-
-#sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
-#ada= optimizers.Adadelta(lr=1, rho=0.95, epsilon=None, decay=0.0)
-#model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+model = joblib.load('./modelBDT_train.pkl')
+print(model)
 
 filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
 filename1= '364253_Sherpa_222_NNPDF30NNLO_lllv_Systematics.root'

@@ -24,6 +24,31 @@ def AMS(s, b):
     else:
         return math.sqrt(radicand)
 
+def read_data_apply(filepath, X_mean, X_dev, Label):
+    rootfile=ROOT.TFile(filepath)
+    tree = rootfile.Get('nominal')
+    array = tree2array(tree, selection='m_Valid_jet1==1 && m_Valid_jet2==1')
+    data = pd.DataFrame(array)
+    data = data.reset_index(drop=True)
+    data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
+    X = data[['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
+                     'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2','m_E_jet3',\
+                     'm_Eta_lep1','m_Eta_lep2', 'm_Eta_lep3','m_Pt_lep1', 'm_Pt_lep2','m_Pt_lep3','m_Pt_W',\
+                     'm_Pt_Z']]
+
+    X= X-X_mean
+    X= X/X_dev
+    if (Label>-1):
+        X['LabelMass']=Label
+    else:
+        prob=np.load('prob.npy')
+        label=np.random.choice(7,X.shape[0], p=prob)
+        X['LabelMass'] = label
+
+    data['LabelMass']=X['LabelMass'] 
+    return data, X
+
+
 def read_data(filename):
     root = ROOT.TFile(filename)
     tree = root.Get('nominal')
