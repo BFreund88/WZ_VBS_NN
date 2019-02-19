@@ -14,15 +14,15 @@ from root_numpy import root2array, tree2array, array2root
 import ROOT
 from common_function import dataset, AMS, read_data, prepare_data, drawfigure
 
-def KerasModel(input_dim,numlayer,numn):
+def KerasModel(input_dim,numlayer,numn, dropout):
     model = Sequential()
     model.add(Dense(numn, input_dim=int(input_dim)))
     model.add(Activation('relu'))
-    model.add(Dropout(0.05))
+    model.add(Dropout(dropout))
     for i in range(numlayer-1):
         model.add(Dense(numn))
         model.add(Activation('relu'))
-        model.add(Dropout(0.05))
+        model.add(Dropout(dropout))
     model.add(Dense(2))
     model.add(Activation('sigmoid'))
 
@@ -41,6 +41,7 @@ data_set=prepare_data(filedir, lumi)
 
 numlayer=3
 numn=200
+dropout=0.05
 
 shape_train=data_set.X_train.shape
 shape_valid=data_set.X_valid.shape
@@ -53,7 +54,7 @@ num_tot=num_train+num_valid#+num_test
 
 print(num_train,num_valid,num_tot)
 
-model=KerasModel(shape_train[1],numlayer,numn)
+model=KerasModel(shape_train[1],numlayer,numn,dropout)
 sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
 ada= optimizers.Adadelta(lr=1, rho=0.95, epsilon=None, decay=0.01)
 model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
@@ -67,22 +68,22 @@ with open('model_architecture.json', 'w') as f:
 epochs=80
 
 checkpoint=keras.callbacks.ModelCheckpoint(filepath='output_NN.h5', monitor='val_acc', verbose=1, save_best_only=True)
-logs = model.fit(data_set.X_train, data_set.y_train, epochs=epochs,
-                 validation_data=(data_set.X_valid, data_set.y_valid),batch_size=128, callbacks=[checkpoint], verbose =1)
+#logs = model.fit(data_set.X_train, data_set.y_train, epochs=epochs,
+#                 validation_data=(data_set.X_valid, data_set.y_valid),batch_size=128, callbacks=[checkpoint], verbose =1)
 
 
-plt.plot(logs.history['acc'], label='train')
-plt.plot(logs.history['val_acc'], label='valid')
-plt.legend()
-plt.title('Pourcentage of correct classification')
-plt.savefig('class.png')
-plt.clf()
-plt.plot(logs.history['loss'], label='train')
-plt.plot(logs.history['val_loss'], label='valid')
-plt.legend()
-plt.title('Training loss')
-plt.savefig('loss.png')
-plt.clf() 
+#plt.plot(logs.history['acc'], label='train')
+#plt.plot(logs.history['val_acc'], label='valid')
+#plt.legend()
+#plt.title('Pourcentage of correct classification')
+#plt.savefig('class.png')
+#plt.clf()
+#plt.plot(logs.history['loss'], label='train')
+#plt.plot(logs.history['val_loss'], label='valid')
+#plt.legend()
+#plt.title('Training loss')
+#plt.savefig('loss.png')
+#plt.clf() 
 
 #Calculate Significance
 #Load saved weights which gave best result on training
@@ -98,7 +99,7 @@ prob_predict_valid_NN = model.predict(data_set.X_valid, verbose=False)
 
 #lower=470
 lower=470
-upper=490
+upper=540
 massindex=0
 mass=300
 
