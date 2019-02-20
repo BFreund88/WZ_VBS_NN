@@ -1,7 +1,7 @@
 from keras.utils.np_utils import to_categorical
 import sklearn
 from sklearn.externals import joblib
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 import numpy as np
 import pandas as pd
@@ -10,12 +10,21 @@ import ROOT
 import matplotlib.pyplot as plt
 from common_function import dataset, AMS, read_data, prepare_data
 
-def BDTModel(max_depth, learning_rate, n_estimators, algorithm):
-    BDT = AdaBoostClassifier(DecisionTreeClassifier(max_depth=max_depth),
+def BDTModelada(max_depth, learning_rate, n_estimators, algorithm):
+    BDTada = AdaBoostClassifier(DecisionTreeClassifier(max_depth=max_depth),
                          learning_rate=learning_rate,
                          n_estimators=n_estimators,
                          algorithm=algorithm)
-    return BDT
+    return BDTada
+
+def BDTModelgrad(max_depth, learning_rate, n_estimators,verbose,n_iter_no_change):
+    BDTgrad = GradientBoostingClassifier(verbose=verbose,\
+                                             n_iter_no_change=n_iter_no_change,
+                                         learning_rate=learning_rate,
+                                         n_estimators=n_estimators
+        )
+    return BDTgrad
+
 
 #Directory where the ntuples are located
 filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
@@ -27,9 +36,14 @@ lumi=150.
 data_set=prepare_data(filedir, lumi)
 
 max_depth = 3
-learning_rate = 1
-n_estimators = 400
-algorithm = "SAMME"
+learning_rate = 0.2
+n_estimators = 800
+algorithm = "SAMME.R"
+verbose = 1
+n_iter_no_change = 20
+
+#model=BDTModelada(max_depth, learning_rate, n_estimators, algorithm)
+model=BDTModelgrad(max_depth, learning_rate, n_estimators,verbose,n_iter_no_change)
 
 
 shape_train=data_set.X_train.shape
@@ -44,7 +58,8 @@ num_tot=num_train+num_valid#+num_test
 
 print("The number of training events {0} validation events {1} and total events {2}".format(num_train,num_valid,num_tot))
 
-model=BDTModel(max_depth, learning_rate, n_estimators, algorithm)
+
+print(model)
 
 print("Fit Model")
 
@@ -93,7 +108,7 @@ plt.savefig('Decision_score_BDT.png')
 
 lower=-0.2
 upper=0.1
-stepsize=0.01
+stepsize=0.02
 
 AMS_train=np.zeros((int((upper-lower)/stepsize),2))
 AMS_valid=np.zeros((int((upper-lower)/stepsize),2))
@@ -117,15 +132,15 @@ for loop2 in range(0,int((upper-lower)/stepsize)):
 
     for index in range(len(Yhat_train_BDT)):
         if (Yhat_train_BDT[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-            s_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/num_train))
+            s_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
         elif (Yhat_train_BDT[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-            b_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/num_train))
+            b_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
 
     for index in range(len(Yhat_valid_BDT)):
         if (Yhat_valid_BDT[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-            s_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/num_valid))
+            s_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
         elif (Yhat_valid_BDT[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-            b_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/num_valid))
+            b_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
 
     print "S and B NN training"
     print s_train_BDT
