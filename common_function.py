@@ -24,17 +24,11 @@ def AMS(s, b):
     else:
         return math.sqrt(radicand)
 
-def read_data_apply(filepath, X_mean, X_dev, Label):
-    rootfile=ROOT.TFile(filepath)
-    tree = rootfile.Get('nominal')
-    array = tree2array(tree, selection='m_Valid_jet1==1 && m_Valid_jet2==1')
-    data = pd.DataFrame(array)
+def read_data_apply(filepath, X_mean, X_dev, Label, variables):
+    data = read_data(filepath)
     data = data.reset_index(drop=True)
     data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
-    X = data[['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
-                     'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2','m_E_jet3',\
-                     'm_Eta_lep1','m_Eta_lep2', 'm_Eta_lep3','m_Pt_lep1', 'm_Pt_lep2','m_Pt_lep3','m_Pt_W',\
-                     'm_Pt_Z']]
+    X = data[variables]
 
     X= X-X_mean
     X= X/X_dev
@@ -56,7 +50,7 @@ def read_data(filename):
     return pd.DataFrame(array)
 
 class dataset:
-    def __init__(self,data,frac_train,frac_valid):
+    def __init__(self,data,frac_train,frac_valid,variables):
         train_full=data.sample(frac=frac_train,random_state=42)
         #test=data.drop(train_full.index)
         train=train_full.sample(frac=frac_valid,random_state=42)
@@ -66,7 +60,6 @@ class dataset:
         self.y_train=to_categorical(train[['Label']])
         self.y_valid=to_categorical(validation[['Label']])
         #self.y_test=to_categorical(test[['Label']])
-
 
         mass_train=train[['Mass']]
         mass_valid=validation[['Mass']]
@@ -80,21 +73,9 @@ class dataset:
         self.W_valid=validation[['Weight']]
         #self.W_test=test[['Weight']]
 
-        X_train = train[['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
-                     'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2','m_E_jet3',\
-                     'm_Eta_lep1','m_Eta_lep2', 'm_Eta_lep3','m_Pt_lep1', 'm_Pt_lep2','m_Pt_lep3','m_Pt_W',\
-                     'm_Pt_Z']]
+        X_train = train[variables]
+        X_valid = validation[variables]
 
-        X_valid = validation[['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
-                          'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2',\
-                          'm_E_jet3', 'm_Eta_lep1','m_Eta_lep2',  \
-                          'm_Eta_lep3','m_Pt_lep1', 'm_Pt_lep2','m_Pt_lep3','m_Pt_W', 'm_Pt_Z']]
-
-        #self.X_test = test[['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
-#                   'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2','m_E_jet3',\
-#                   'm_Eta_lep1','m_Eta_lep2', \
-#                   'm_Eta_lep3','m_Pt_lep1', 'm_Pt_lep2','m_Pt_lep3','m_Pt_W', 'm_Pt_Z']]
-        
         #Save mean and std dev
         np.save('./mean', np.mean(X_train))
         np.save('./std_dev', np.std(X_train))
@@ -104,7 +85,6 @@ class dataset:
 
         self.X_valid= X_valid-np.mean(X_valid)
         self.X_valid= X_valid/np.std(X_valid)
-
         
         #self.X_test= self.X_test-np.mean(self.X_test)
         #self.X_test= self.X_test/np.std(self.X_test)
@@ -115,55 +95,51 @@ class dataset:
         self.mass_train_label=train[['LabelMass']]
         self.mass_valid_label=validation[['LabelMass']]
         #self.X_test['LabelMass']=test[['LabelMass']]
-
         
-def prepare_data(filedir, lumi):
+def prepare_data(input_samples):
     #Read background and signal files and save them as panda data frames
-    
-    #Background WZ
-    bkgWZQCD = read_data(filedir+'364253_Sherpa_222_NNPDF30NNLO_lllv_Systematics.root')
-    
-    #Background WZ EW
-    bkgWZEW = read_data(filedir+'364284_Sherpa_222_NNPDF30NNLO_lllvjj_EW6_Systematics.root')
-    
-    #Normalize weights and store these in panda data frames
-    bkgWZQCD['Weight']=bkgWZQCD['Weight']*lumi*4583./5485580.
-    bkgWZEW['Weight']=bkgWZEW['Weight']*lumi*47./1471000.
 
-    bg=bkgWZQCD.append(bkgWZEW)
-    #bg=bkgWZQCD
+    #Names of bck samples
+    namesbkg = input_samples.bckgr["name"]
+    xsbkg = input_samples.bckgr["xs"]
+    neventsbkg = input_samples.bckgr["nevents"]
+    #Read files one by one and normalize weights to 150 fb^-1
+    bg = None
+    print('Read Background Samples')
+    for i in range(len(namesbkg)):
+        sample = read_data(input_samples.filedir+namesbkg[i])
+        print(namesbkg[i])
+        sample['Weight']=sample['Weight']*input_samples.lumi*xsbkg[i]/neventsbkg[i]
+        if bg is None:
+            bg=sample
+        else:
+            bg=bg.append(sample)
+
+    #Add label 0 for bkg
     bg['Label'] = '0'
 
     #Read signal
-    sig300= read_data(filedir+'new/signalsNew/mc16d/305029_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_300_qcd0_Systematics.root')
-    sig400= read_data(filedir+'new/signalsNew/mc16d/305030_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_400_qcd0_Systematics.root')
-    sig500= read_data(filedir+'new/signalsNew/mc16d/305031_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_500_qcd0_Systematics.root')
-    sig600= read_data(filedir+'new/signalsNew/mc16d/305032_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_600_qcd0_Systematics.root')
-    sig700= read_data(filedir+'new/signalsNew/mc16d/305033_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_700_qcd0_Systematics.root')
-    sig800= read_data(filedir+'new/signalsNew/mc16d/305034_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_800_qcd0_Systematics.root')
-    sig900= read_data(filedir+'new/signalsNew/mc16d/305035_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_900_qcd0_Systematics.root')
-
-    sig300['Weight']=sig300['Weight']*lumi*3.9238/(2*40000.)
-    sig300['LabelMass']=0
-    sig400['Weight']=sig400['Weight']*lumi*2.4428/(2*40000.)
-    sig400['LabelMass']=1
-    sig500['Weight']=sig500['Weight']*lumi*1.6113/(2*40000.)
-    sig500['LabelMass']=2
-    sig600['Weight']=sig600['Weight']*lumi*1.1005/(2*40000.)
-    sig600['LabelMass']=3
-    sig700['Weight']=sig700['Weight']*lumi*0.7734/(2*40000.)
-    sig700['LabelMass']=4
-    sig800['Weight']=sig800['Weight']*lumi*0.55433/(2*40000.)
-    sig800['LabelMass']=5
-    sig900['Weight']=sig900['Weight']*lumi*0.40394/(2*40000.)
-    sig900['LabelMass']=6
-
-    sig=sig300.append([sig400,sig500,sig600,sig700,sig800,sig900])
+    namessig = input_samples.sig["name"]
+    xssig = input_samples.sig["xs"]
+    neventssig = input_samples.sig["nevents"]
+    sig = None
+    prob = np.empty(len(namessig))
+    print('Read Signal Samples')
+    for i in range(len(namessig)):
+        sample = read_data(input_samples.filedirsig+namessig[i])
+        print(namessig[i])
+        sample['Weight']=sample['Weight']*input_samples.lumi*xssig[i]/neventssig[i]
+        sample['LabelMass'] = i+1
+        prob[i] = sample.shape[0] 
+        if sig is None:
+            sig=sample
+        else:
+            sig=sig.append(sample)
+    #Probability distribution for random Mass Label
+    prob=prob/float(sig.shape[0])
     sig['Label'] = '1'
 
-    #Probability distribution for random Mass Label
-    prob=[float(sig300.shape[0])/sig.shape[0],float(sig400.shape[0])/sig.shape[0],float(sig500.shape[0])/sig.shape[0],float(sig600.shape[0])/sig.shape[0],float(sig700.shape[0])/sig.shape[0],float(sig800.shape[0])/sig.shape[0],float(sig900.shape[0])/sig.shape[0]]
-
+    #Apply random mass label to bkg
     label=np.random.choice(7,bg.shape[0], p=prob)
 
     bg['LabelMass'] = label
@@ -177,7 +153,7 @@ def prepare_data(filedir, lumi):
     # Pick a random seed for reproducible results
     # Use 30% of the training sample for validation
 
-    data_cont = dataset(data,1.,0.7)
+    data_cont = dataset(data,1.,input_samples.valfrac,input_samples.variables)
     return data_cont
 
 def drawfigure(model,prob_predict_train_NN,data,X_test):

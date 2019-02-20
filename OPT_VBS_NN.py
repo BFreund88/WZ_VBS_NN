@@ -15,8 +15,7 @@ import math
 from root_numpy import root2array, tree2array, array2root
 import ROOT
 from common_function import dataset, AMS, read_data, prepare_data, drawfigure
-
-
+import config_OPT_NN as conf
 
 def KerasModel(input_dim,numlayer,numn, dropout):
     model = Sequential()
@@ -44,6 +43,7 @@ Optional arguments
   --numn=<numn> Number of neurons per hidden layer
   --dropout=<dropout> Dropout to reduce overfitting
   --epoch=<epochs> Specify training epochs
+  --lr=<lr> Learning rate for SGD optimizer
 """
 
 
@@ -52,20 +52,19 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
     parser.add_argument('--numlayer', help = "Specifies the number of layers of the Neural Network", default=3, type=int)
     parser.add_argument('--numn', help = "Specifies the number of neurons per hidden layer", default=200, type=int)
+    parser.add_argument('--lr','--learning_rate', help = "Specifies the learning rate for SGD optimizer", default=0.01, type=float)
     parser.add_argument('--dropout', help = "Specifies the applied dropout", default=0.05, type=float)
     parser.add_argument('--epochs', help = "Specifies the number of epochs", default=80, type=int)
     
     args = parser.parse_args()
     print(args)
 
-    #Directory where the ntuples are located\
-    filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
-    #Assumed luminosity
-    lumi=150.
+    #Load input_sample class from config file
+    input_sample=conf.input_samples
 
- 
-    data_set=prepare_data(filedir, lumi)
-
+    #Read data files
+    data_set=prepare_data(input_sample)
+    #Get input dimensions
     shape_train=data_set.X_train.shape
     shape_valid=data_set.X_valid.shape
     #shape_test=data_set.X_test.shape
@@ -76,12 +75,16 @@ if __name__ == '__main__':
 
     num_tot=num_train+num_valid#+num_test
     
-    print('Number of training, validation and total events.')
-    print(num_train,num_valid,num_tot)
+    print('Number of training: {}, validation: {} and total events: {}.'.format(num_train,num_valid,num_tot))
 
+    #Define model with given parameters
     model=KerasModel(shape_train[1],args.numlayer,args.numn,args.dropout)
-    sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
+    
+    #Possible optimizers
+    sgd = optimizers.SGD(lr=args.lr, decay=1e-6, momentum=0.6, nesterov=True)
     ada= optimizers.Adadelta(lr=1, rho=0.95, epsilon=None, decay=0.01)
+    nadam=keras.optimizers.Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, schedule_decay=0.004)
+
     model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
     model.summary()
     model.save("modelNN_initial.h5")
@@ -90,9 +93,12 @@ if __name__ == '__main__':
     with open('model_architecture.json', 'w') as f:
         f.write(model.to_json())
 
+    #Define checkpoint to save best performing NN
     checkpoint=keras.callbacks.ModelCheckpoint(filepath='output_NN.h5', monitor='val_acc', verbose=args.verbose, save_best_only=True)
+    
+    #Train Model
     logs = model.fit(data_set.X_train, data_set.y_train, epochs=args.epochs,
-                     validation_data=(data_set.X_valid, data_set.y_valid),batch_size=128, callbacks=[checkpoint], verbose =1)
+                     validation_data=(data_set.X_valid, data_set.y_valid),batch_size=128, callbacks=[checkpoint], verbose =1, class_weight = 'auto')
 
     plt.plot(logs.history['acc'], label='train')
     plt.plot(logs.history['val_acc'], label='valid')
@@ -109,11 +115,7 @@ if __name__ == '__main__':
 
     #Calculate Significance
     #Load saved weights which gave best result on training
-    model.load_weights('output_NN.h5')
-    # Compile model (required to make predictions)
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
-
-    model.save('NN_model_complete.h5')
+    model.load_model('output_NN.h5')
 
     prob_predict_train_NN = model.predict(data_set.X_train, verbose=False)
     prob_predict_valid_NN = model.predict(data_set.X_valid, verbose=False)
