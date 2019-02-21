@@ -131,7 +131,7 @@ def prepare_data(input_samples):
         sample = read_data(input_samples.filedirsig+namessig[i])
         print(namessig[i])
         sample['Weight']=sample['Weight']*input_samples.lumi*xssig[i]/neventssig[i]
-        sample['LabelMass'] = i+1
+        sample['LabelMass'] = i
         prob[i] = sample.shape[0] 
         if sig is None:
             sig=sample
@@ -226,10 +226,16 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     plt.clf() 
 
 
-def calc_sig(data_set,lower,upper,step,mass,massindex):
+def calc_sig(data_set,prob_predict_train_NN, prob_predict_valid_NN,lower,upper,step,mass,massindex):
     AMS_train=np.zeros((upper-lower,2))
     AMS_valid=np.zeros((upper-lower,2))
     index2=0
+
+    shape_train=data_set.X_train.shape
+    shape_valid=data_set.X_valid.shape
+    num_train=shape_train[0]
+    num_valid=shape_valid[0]
+    num_tot=num_train+num_valid#+num_test
 
     for loop2 in range(lower,upper, step):
         print "With upper percentile {}".format(loop2)

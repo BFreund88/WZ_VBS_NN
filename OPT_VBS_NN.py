@@ -131,11 +131,11 @@ if __name__ == '__main__':
     #    print "Proba {}".format(prob_predict_train_NN[index,:])
 
     #Calculate significance in output range between lower and upper
-    lower=44.
-    upper=60.
+    lower=44
+    upper=60
     massindex=0
     mass=300
     step = 2
     
-    calc_sig(data_set, lower,upper,step,mass,massindex)
+    calc_sig(data_set, prob_predict_train_NN, prob_predict_valid_NN, lower,upper,step,mass,massindex)
 
