@@ -104,7 +104,7 @@ plt.title('Decision Scores')
 
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.35)
-plt.savefig('Decision_score_BDT.png')
+plt.savefig('./ControlPlots/Decision_score_BDT.png')
 
 lower=-0.2
 upper=0.1
@@ -163,5 +163,5 @@ plt.plot(AMS_train[:,0],AMS_train[:,1], label='train')
 plt.plot(AMS_valid[:,0],AMS_valid[:,1], label='valid')
 plt.legend()
 plt.title('Significance as a function of the probability output')
-plt.savefig('significance_BDT.png')
+plt.savefig('./ControlPlots/significance_BDT.png')
 

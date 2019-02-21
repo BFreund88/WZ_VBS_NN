@@ -113,7 +113,7 @@ def prepare_data(input_samples):
         if bg is None:
             bg=sample
         else:
-            bg=bg.append(sample)
+            bg=bg.append(sample, sort=True)
 
     #Add label 0 for bkg
     bg['Label'] = '0'
@@ -134,7 +134,7 @@ def prepare_data(input_samples):
         if sig is None:
             sig=sample
         else:
-            sig=sig.append(sample)
+            sig=sig.append(sample, sort=True)
     #Probability distribution for random Mass Label
     prob=prob/float(sig.shape[0])
     sig['Label'] = '1'
@@ -147,7 +147,7 @@ def prepare_data(input_samples):
     #Save prob distribution
     np.save('./prob', prob)
     
-    data=bg.append(sig)
+    data=bg.append(sig, sort=True)
     data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
     data = data.sample(frac=1).reset_index(drop=True)
     # Pick a random seed for reproducible results
@@ -220,5 +220,57 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
         alabel.set_fontsize('small')
   
     # Save the result to png
-    plt.savefig("NN_clf.png")
+    plt.savefig("./ControlPlots/NN_clf.png")
     plt.clf() 
+
+
+def calc_sig(lower,upper,step,mass,massindex):
+    AMS_train=np.zeros((upper-lower,2))
+    AMS_valid=np.zeros((upper-lower,2))
+    index2=0
+
+    for loop2 in range(lower,upper, step):
+        print "With upper percentile {}".format(loop2)
+        pcutNN = np.percentile(prob_predict_train_NN,loop2)
+
+        print("Cut Value {}".format(pcutNN))
+        Yhat_train_NN = prob_predict_train_NN[:,1] > pcutNN
+        Yhat_valid_NN = prob_predict_valid_NN[:,1] > pcutNN
+    
+        s_train_NN=b_train_NN=0
+        s_valid_NN=b_valid_NN=0
+
+        for index in range(len(Yhat_train_NN)):
+            if (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
+                s_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
+            elif (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
+                b_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
+
+        for index in range(len(Yhat_valid_NN)):
+            if (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
+                s_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
+            elif (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
+                b_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
+
+        print "S and B NN training"
+        print s_train_NN
+        print b_train_NN
+        print "S and B NN validation"
+        print s_valid_NN
+        print b_valid_NN
+
+        print 'Calculating AMS score for NNs with a probability cutoff pcut=',pcutNN
+        print '   - AMS based on 90% training   sample:',AMS(s_train_NN,b_train_NN)
+        print '   - AMS based on 10% validation sample:',AMS(s_valid_NN,b_valid_NN)
+    
+        AMS_train[index2,0]=loop2
+        AMS_train[index2,1]=AMS(s_train_NN,b_train_NN)
+        AMS_valid[index2,0]=loop2
+        AMS_valid[index2,1]=AMS(s_valid_NN,b_valid_NN)
+        index2=index2+1
+
+    plt.plot(AMS_train[:,0],AMS_train[:,1], label='train')
+    plt.plot(AMS_valid[:,0],AMS_valid[:,1], label='valid')
+    plt.legend()
+    plt.title('Significance as a function of the probability output')
+    plt.savefig('./ControlPlots/significance_NN.png')

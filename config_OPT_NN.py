@@ -2,7 +2,7 @@ import numpy as np
 class input_samples:
     #Assumed luminosity
     lumi = 150.
-    #Fraction reserved for validation
+    #Fraction reserved for testing 
     valfrac = 0.7
     #Directory where ntuples are located
     filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
@@ -27,7 +27,6 @@ class input_samples:
         'xs' : [3.9238,2.4428,1.6113,1.1005,0.7734,0.55433,0.40394],
         'nevents' : [40000,40000,40000,40000,40000,40000,40000]
     }
-    
     #Variables used for training
     variables = ['Mjj','Detajj','MET','PtZoverWZmass','PtWoverWZmass' ,'m_Pt_jet1','m_Pt_jet2', \
                      'm_Pt_jet3','m_Eta_jet1','m_Eta_jet2','m_Eta_jet3','m_E_jet1','m_E_jet2','m_E_jet3',\
