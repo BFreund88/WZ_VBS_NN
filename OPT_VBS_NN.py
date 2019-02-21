@@ -1,4 +1,4 @@
-\import argparse
+import argparse
 import sys
 import keras
 from keras.utils.np_utils import to_categorical
