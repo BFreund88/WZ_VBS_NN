@@ -4,6 +4,8 @@ import ROOT
 from root_numpy import root2array, tree2array, array2root
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import math
 
@@ -224,7 +226,7 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     plt.clf() 
 
 
-def calc_sig(lower,upper,step,mass,massindex):
+def calc_sig(data_set,lower,upper,step,mass,massindex):
     AMS_train=np.zeros((upper-lower,2))
     AMS_valid=np.zeros((upper-lower,2))
     index2=0

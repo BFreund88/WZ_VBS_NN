@@ -10,6 +10,8 @@ from keras import optimizers
 import sklearn
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import math
 from root_numpy import root2array, tree2array, array2root
@@ -49,7 +51,7 @@ Optional arguments
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'NN optimisation')
-    parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
+    parser.add_argument("--v", "--verbose", help="increase output verbosity", default=0, type=int)
     parser.add_argument('--numlayer', help = "Specifies the number of layers of the Neural Network", default=3, type=int)
     parser.add_argument('--numn', help = "Specifies the number of neurons per hidden layer", default=200, type=int)
     parser.add_argument('--lr','--learning_rate', help = "Specifies the learning rate for SGD optimizer", default=0.01, type=float)
@@ -94,11 +96,11 @@ if __name__ == '__main__':
         f.write(model.to_json())
 
     #Define checkpoint to save best performing NN
-    checkpoint=keras.callbacks.ModelCheckpoint(filepath='output_NN.h5', monitor='val_acc', verbose=args.verbose, save_best_only=True)
+    checkpoint=keras.callbacks.ModelCheckpoint(filepath='output_NN.h5', monitor='val_acc', verbose=args.v, save_best_only=True)
     
     #Train Model
     logs = model.fit(data_set.X_train, data_set.y_train, epochs=args.epochs,
-                     validation_data=(data_set.X_valid, data_set.y_valid),batch_size=256, callbacks=[checkpoint], verbose =1, class_weight = 'auto')
+                     validation_data=(data_set.X_valid, data_set.y_valid),batch_size=256, callbacks=[checkpoint], verbose =args.v, class_weight = 'auto')
 
     plt.plot(logs.history['acc'], label='train')
     plt.plot(logs.history['val_acc'], label='valid')
