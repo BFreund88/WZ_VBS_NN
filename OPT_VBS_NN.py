@@ -1,4 +1,4 @@
-import argparse
+\import argparse
 import sys
 import keras
 from keras.utils.np_utils import to_categorical
@@ -131,8 +131,8 @@ if __name__ == '__main__':
     #    print "Proba {}".format(prob_predict_train_NN[index,:])
 
     #Calculate significance in output range between lower and upper
-    lower=44
-    upper=60
+    lower=40
+    upper=70
     massindex=0
     mass=300
     step = 2

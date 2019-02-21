@@ -142,7 +142,7 @@ def prepare_data(input_samples):
     sig['Label'] = '1'
 
     #Apply random mass label to bkg
-    label=np.random.choice(7,bg.shape[0], p=prob)
+    label=np.random.choice(len(namessig),bg.shape[0], p=prob)
 
     bg['LabelMass'] = label
 
@@ -151,7 +151,7 @@ def prepare_data(input_samples):
     
     data=bg.append(sig, sort=True)
     data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
-    data = data.sample(frac=1).reset_index(drop=True)
+    data = data.sample(frac=1,random_state=42).reset_index(drop=True)
     # Pick a random seed for reproducible results
     # Use 30% of the training sample for validation
 
@@ -227,8 +227,8 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
 
 
 def calc_sig(data_set,prob_predict_train_NN, prob_predict_valid_NN,lower,upper,step,mass,massindex):
-    AMS_train=np.zeros((upper-lower,2))
-    AMS_valid=np.zeros((upper-lower,2))
+    AMS_train=np.zeros(((upper-lower)/step,2))
+    AMS_valid=np.zeros(((upper-lower)/step,2))
     index2=0
 
     shape_train=data_set.X_train.shape
