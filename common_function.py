@@ -19,7 +19,7 @@ def AMS(s, b):
     br = 0.00001
     sigma=math.sqrt(b+br)
     n=s+b+br
-    radicand = 2 *( n * math.log (n*(b+sigma)/(b**2+n*sigma+br))-b**2/sigma*math.log(1+sigma*(n-b)/(b*(b+br+sigma))))
+    radicand = 2 *( n * math.log (n*(b+br+sigma)/(b**2+n*sigma+br))-b**2/sigma*math.log(1+sigma*(n-b)/(b*(b+br+sigma))))
     if radicand < 0:
         print 'radicand is negative. Exiting'
         exit()
@@ -48,7 +48,7 @@ def read_data_apply(filepath, X_mean, X_dev, Label, variables):
 def read_data(filename):
     root = ROOT.TFile(filename)
     tree = root.Get('nominal')
-    array = tree2array(tree, selection='m_Valid_jet1==1 && m_Valid_jet2==1')
+    array = tree2array(tree, selection='m_Valid_jet1==1 && m_Valid_jet2==1 && Mjj>100.')
     return pd.DataFrame(array)
 
 class dataset:
@@ -226,9 +226,10 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     plt.clf() 
 
 
-def calc_sig(data_set,prob_predict_train_NN, prob_predict_valid_NN,lower,upper,step,mass,massindex):
+def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod):
     AMS_train=np.zeros(((upper-lower)/step,2))
     AMS_valid=np.zeros(((upper-lower)/step,2))
+
     index2=0
 
     shape_train=data_set.X_train.shape
@@ -237,48 +238,49 @@ def calc_sig(data_set,prob_predict_train_NN, prob_predict_valid_NN,lower,upper,s
     num_valid=shape_valid[0]
     num_tot=num_train+num_valid#+num_test
 
-    for loop2 in range(lower,upper, step):
-        print "With upper percentile {}".format(loop2)
-        pcutNN = np.percentile(prob_predict_train_NN,loop2)
+    for cut in range(lower,upper, step):
+        print "With upper percentile {}".format(cut)
+        pcutNN = np.percentile(prob_predict_train,cut)
+
 
         print("Cut Value {}".format(pcutNN))
-        Yhat_train_NN = prob_predict_train_NN[:,1] > pcutNN
-        Yhat_valid_NN = prob_predict_valid_NN[:,1] > pcutNN
+        Yhat_train = prob_predict_train[:] > pcutNN
+        Yhat_valid = prob_predict_valid[:] > pcutNN
     
-        s_train_NN=b_train_NN=0
-        s_valid_NN=b_valid_NN=0
+        s_train=b_train=0
+        s_valid=b_valid=0
 
-        for index in range(len(Yhat_train_NN)):
-            if (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
-                s_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
-            elif (Yhat_train_NN[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-                b_train_NN +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
+        for index in range(len(Yhat_train)):
+            if (Yhat_train[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
+                s_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
+            elif (Yhat_train[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
+                b_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
 
-        for index in range(len(Yhat_valid_NN)):
-            if (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
-                s_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
-            elif (Yhat_valid_NN[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-                b_valid_NN +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
+        for index in range(len(Yhat_valid)):
+            if (Yhat_valid[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
+                s_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
+            elif (Yhat_valid[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
+                b_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
 
         print "S and B NN training"
-        print s_train_NN
-        print b_train_NN
+        print s_train
+        print b_train
         print "S and B NN validation"
-        print s_valid_NN
-        print b_valid_NN
+        print s_valid
+        print b_valid
 
-        print 'Calculating AMS score for NNs with a probability cutoff pcut=',pcutNN
-        print '   - AMS based on 90% training   sample:',AMS(s_train_NN,b_train_NN)
-        print '   - AMS based on 10% validation sample:',AMS(s_valid_NN,b_valid_NN)
+        print 'Calculating AMS score for NNs with a probability cutoff pcut=',cut
+        print '   - AMS based on 90% training   sample:',AMS(s_train,b_train)
+        print '   - AMS based on 10% validation sample:',AMS(s_valid,b_valid)
     
-        AMS_train[index2,0]=loop2
-        AMS_train[index2,1]=AMS(s_train_NN,b_train_NN)
-        AMS_valid[index2,0]=loop2
-        AMS_valid[index2,1]=AMS(s_valid_NN,b_valid_NN)
+        AMS_train[index2,0]=cut
+        AMS_train[index2,1]=AMS(s_train,b_train)
+        AMS_valid[index2,0]=cut
+        AMS_valid[index2,1]=AMS(s_valid,b_valid)
         index2=index2+1
 
     plt.plot(AMS_train[:,0],AMS_train[:,1], label='train')
     plt.plot(AMS_valid[:,0],AMS_valid[:,1], label='valid')
     plt.legend()
     plt.title('Significance as a function of the probability output')
-    plt.savefig('./ControlPlots/significance_NN.png')
+    plt.savefig('./ControlPlots/significance_'+str(mod)+'.png')

@@ -137,5 +137,5 @@ if __name__ == '__main__':
     mass=300
     step = 2
     
-    calc_sig(data_set, prob_predict_train_NN, prob_predict_valid_NN, lower,upper,step,mass,massindex)
+    calc_sig(data_set, prob_predict_train_NN[:,1], prob_predict_valid_NN[:,1], lower,upper,step,mass,massindex,'NN')
 

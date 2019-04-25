@@ -1,3 +1,5 @@
+import argparse
+import sys
 from keras.utils.np_utils import to_categorical
 import sklearn
 from sklearn.externals import joblib
@@ -7,8 +9,12 @@ import numpy as np
 import pandas as pd
 from root_numpy import root2array, tree2array, array2root
 import ROOT
+import matplotlib as mpl
+#To allow running in batch mode
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-from common_function import dataset, AMS, read_data, prepare_data
+from common_function import dataset, AMS, read_data, prepare_data, calc_sig
+import config_OPT_NN as conf
 
 def BDTModelada(max_depth, learning_rate, n_estimators, algorithm):
     BDTada = AdaBoostClassifier(DecisionTreeClassifier(max_depth=max_depth),
@@ -18,150 +24,132 @@ def BDTModelada(max_depth, learning_rate, n_estimators, algorithm):
     return BDTada
 
 def BDTModelgrad(max_depth, learning_rate, n_estimators,verbose,n_iter_no_change):
-    BDTgrad = GradientBoostingClassifier(verbose=verbose,\
-                                             n_iter_no_change=n_iter_no_change,
+    BDTgrad = GradientBoostingClassifier(verbose=verbose,
+                                         n_iter_no_change=n_iter_no_change,
                                          learning_rate=learning_rate,
-                                         n_estimators=n_estimators
-        )
+                                         n_estimators=n_estimators)
     return BDTgrad
 
 
-#Directory where the ntuples are located
-filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/'
-print('Read files from directory {0}'.format(filedir))
-#Assumed luminosity
-lumi=150.
 
- 
-data_set=prepare_data(filedir, lumi)
+"""Boosted Decision Tree Optimisation   
 
-max_depth = 3
-learning_rate = 0.2
-n_estimators = 800
-algorithm = "SAMME.R"
-verbose = 1
-n_iter_no_change = 20
+Usage:  
+  python Train_BDT.py
 
-#model=BDTModelada(max_depth, learning_rate, n_estimators, algorithm)
-model=BDTModelgrad(max_depth, learning_rate, n_estimators,verbose,n_iter_no_change)
+Options: 
+  -h --help             Show this screen. 
+Optional arguments 
+  --output =<output>    Specify output name
+  --depth=<depth> Maximal depth of estimators in Ensemble 
+  --nest=<nest> Number of estimators in Ensemble 
+  --early=<early> Early stopping for Gradient Boosting Regressor
+
+  --v=<verbose> Set Verbose level
+  --lr=<lr> Learning rate for SGD optimizer
+  --opt=<opt> Chose between Ensemble Methods AdaBoost and Gradient Boosting Regressor (0 or 1)
+"""
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'BDT optimisation')
+    parser.add_argument("--v", "--verbose", help="increase output verbosity", default=0, type=int)
+    parser.add_argument("--output", help="Specify Output name", default='', type=str)
+    parser.add_argument('--depth', help = "Specifies the maximal depth of trees in Ensemble", default=3, type=int)
+    parser.add_argument('--nest', help = "Specifies the number of estimators in Ensemble", default=400, type=int)
+    parser.add_argument('--lr','--learning_rate', help = "Specifies the learning rate", default=0.01, type=float)
+    parser.add_argument('--early', help = "Specifies the condition for early stopping for Gradient Boosting Regressor", default=0, type=int)
+    parser.add_argument('--opt', help = "Specifies the optimizer used: AdaBoost:0 and Gradient Boost:1 (default),", default=1, type=int)
+
+    args = parser.parse_args()
+    print('Train with hyper parameters:')
+    print(args)
+
+    #Load input_sample class from config file
+    input_sample=conf.input_samples
+
+    #Read data files
+    data_set=prepare_data(input_sample)
+
+    algorithm = "SAMME.R"
+
+    #Define Ensemble models with given hyper parameters
+    model_ada=BDTModelada(args.depth, args.lr, args.nest, algorithm)
+    model_boost=BDTModelgrad(args.depth, args.lr, args.nest,args.v,args.early)
+
+    opt = [model_ada,model_boost]
+
+    #Show number of events in each category
+    shape_train=data_set.X_train.shape
+    shape_valid=data_set.X_valid.shape
+    #shape_test=data_set.X_test.shape
+
+    num_train=shape_train[0]
+    num_valid=shape_valid[0]
+    #num_test=shape_test[0]
+    num_tot=num_train+num_valid#+num_test
 
 
-shape_train=data_set.X_train.shape
-shape_valid=data_set.X_valid.shape
-#shape_test=data_set.X_test.shape
+    print("The number of training events {0} validation events {1} and total events {2}".format(num_train,num_valid,num_tot))
 
-num_train=shape_train[0]
-num_valid=shape_valid[0]
-#num_test=shape_test[0]
-num_tot=num_train+num_valid#+num_test
+    #Show model
+    print(opt[args.opt])
 
+    print("Fit Model")
 
-print("The number of training events {0} validation events {1} and total events {2}".format(num_train,num_valid,num_tot))
+    opt[args.opt].fit(data_set.X_train, data_set.y_train[:,1].ravel())
 
+    print("Save Model")
 
-print(model)
+    filenameBDT = './'+args.output+'modelBDT_train.pkl'
+    _ = joblib.dump(opt[args.opt], filenameBDT, compress=9)
 
-print("Fit Model")
+    # Plot the two-class decision scores
+    plot_colors = "br"
+    plot_step = 0.025
+    twoclass_output = opt[args.opt].decision_function(data_set.X_train)
+    plot_range = (twoclass_output.min(), twoclass_output.max())
+    plt.subplot(111)
+    class_names = "SB"
 
-model.fit(data_set.X_train, data_set.y_train[:,0].ravel())
+    print('Save decision plot')
 
+    for i, n, c in zip(range(2), class_names, plot_colors):
+        plt.hist(twoclass_output[data_set.y_train[:,1] == i],
+                 bins=20,
+                 range=plot_range,
+                 facecolor=c,
+                 label='Class %s' % n,
+                 alpha=.5,
+                 #edgecolor='k',
+                 log=True)
+        x1, x2, y1, y2 = plt.axis()
 
-print("Save Model")
+     # Make a colorful backdrop to show the clasification regions in red and blue
+    plt.axvspan(0, twoclass_output.max(), color='blue',alpha=0.08)
+    plt.axvspan(twoclass_output.min(),0, color='red',alpha=0.08)
 
-filenameBDT = './modelBDT_train.pkl'
-_ = joblib.dump(model, filenameBDT, compress=9)
+    plt.axis((x1, x2, y1, y2 * 1.2))
+    plt.legend(loc='upper right')
+    plt.ylabel('Samples')
+    plt.xlabel('Score')
+    plt.title('Decision Scores')
 
-# Plot the two-class decision scores
-plot_colors = "br"
-plot_step = 0.025
-twoclass_output = model.decision_function(data_set.X_train)
-plot_range = (twoclass_output.min(), twoclass_output.max())
-plt.subplot(111)
-class_names = "SB"
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.35)
+    plt.savefig('./ControlPlots/Decision_score_BDT.png')
 
-print('Save decision plot')
+    #Calculate significance in output range between lower and upper
+    massindex=0
+    mass=300
 
-for i, n, c in zip(range(2), class_names, plot_colors):
-    plt.hist(twoclass_output[data_set.y_train[:,0] == i],
-             bins=20,
-             range=plot_range,
-             facecolor=c,
-             label='Class %s' % n,
-             alpha=.5,
-             #edgecolor='k',
-             log=True)
-x1, x2, y1, y2 = plt.axis()
+    lower=40
+    upper=70
+    step=2
 
-# Make a colorful backdrop to show the clasification regions in red and blue
-plt.axvspan(0, twoclass_output.max(), color='blue',alpha=0.08)
-plt.axvspan(twoclass_output.min(),0, color='red',alpha=0.08)
-
-plt.axis((x1, x2, y1, y2 * 1.2))
-plt.legend(loc='upper right')
-plt.ylabel('Samples')
-plt.xlabel('Score')
-plt.title('Decision Scores')
-
-plt.tight_layout()
-plt.subplots_adjust(wspace=0.35)
-plt.savefig('./ControlPlots/Decision_score_BDT.png')
-
-lower=-0.2
-upper=0.1
-stepsize=0.02
-
-AMS_train=np.zeros((int((upper-lower)/stepsize),2))
-AMS_valid=np.zeros((int((upper-lower)/stepsize),2))
-
-index2=0
-
-prob_predict_train_BDT = model.decision_function(data_set.X_train)
-prob_predict_valid_BDT = model.decision_function(data_set.X_valid)
-
-mass=300
-
-for loop2 in range(0,int((upper-lower)/stepsize)):
-
-    print "Cutting value {}".format(loop2*stepsize+lower)
+    prob_predict_train_BDT = opt[args.opt].decision_function(data_set.X_train)
+    prob_predict_valid_BDT = opt[args.opt].decision_function(data_set.X_valid)
     
-    Yhat_train_BDT = prob_predict_train_BDT[:] > loop2*stepsize+lower
-    Yhat_valid_BDT = prob_predict_valid_BDT[:] > loop2*stepsize+lower
-    
-    s_train_BDT=b_train_BDT=0
-    s_valid_BDT=b_valid_BDT=0
+    print(prob_predict_train_BDT)
 
-    for index in range(len(Yhat_train_BDT)):
-        if (Yhat_train_BDT[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-            s_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
-        elif (Yhat_train_BDT[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
-            b_train_BDT +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
+    calc_sig(data_set, prob_predict_train_BDT, prob_predict_valid_BDT, lower,upper,step,mass,massindex,'BDT')
 
-    for index in range(len(Yhat_valid_BDT)):
-        if (Yhat_valid_BDT[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-            s_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
-        elif (Yhat_valid_BDT[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
-            b_valid_BDT +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
-
-    print "S and B NN training"
-    print s_train_BDT
-    print b_train_BDT
-    print "S and B NN validation"
-    print s_valid_BDT
-    print b_valid_BDT
-
-    print 'Calculating AMS score for BDTs with a probability cutoff pcut=',loop2*stepsize+lower
-    print '   - AMS based on 90% training   sample:',AMS(s_train_BDT,b_train_BDT)
-    print '   - AMS based on 10% validation sample:',AMS(s_valid_BDT,b_valid_BDT)
-    
-    AMS_train[index2,0]=loop2*stepsize+lower
-    AMS_train[index2,1]=AMS(s_train_BDT,b_train_BDT)
-    AMS_valid[index2,0]=loop2*stepsize+lower
-    AMS_valid[index2,1]=AMS(s_valid_BDT,b_valid_BDT)
-    index2=index2+1
-
-plt.plot(AMS_train[:,0],AMS_train[:,1], label='train')
-plt.plot(AMS_valid[:,0],AMS_valid[:,1], label='valid')
-plt.legend()
-plt.title('Significance as a function of the probability output')
-plt.savefig('./ControlPlots/significance_BDT.png')
 

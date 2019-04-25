@@ -11,6 +11,8 @@ import pandas as pd
 import math
 from root_numpy import root2array, tree2array, array2root
 import ROOT
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from keras.models import model_from_json
 from common_function import read_data_apply
