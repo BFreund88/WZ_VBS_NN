@@ -40,7 +40,7 @@ apply_sample=conf.apply_samples
 
 
 #Restores Model and compiles automatically
-model = joblib.load('./modelBDT_train.pkl')
+model = joblib.load('./OutputModel/modelBDT_train.pkl')
 print(model)
 
 

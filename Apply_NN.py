@@ -43,7 +43,7 @@ input_sample=conf.input_samples
 apply_sample=conf.apply_samples
 
 #Restores Model and compiles automatically
-model = load_model('output_NN.h5')
+model = load_model('OutputModel/output_NN.h5')
 model.summary()
 
 #Load Mean and std dev

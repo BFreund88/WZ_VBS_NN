@@ -99,7 +99,7 @@ if __name__ == '__main__':
     model.save("modelNN_initial.h5")
 
     # Save the model architecture
-    with open('model_architecture.json', 'w') as f:
+    with open('OutputModel/model_architecture.json', 'w') as f:
         f.write(model.to_json())
 
     #Define checkpoint to save best performing NN and early stopping
@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
     #Calculate Significance
     #Load saved weights which gave best result on training
-    model = load_model('output_NN.h5')
+    model = load_model(path)
 
     prob_predict_train_NN = model.predict(data_set.X_train, verbose=False)
     prob_predict_valid_NN = model.predict(data_set.X_valid, verbose=False)

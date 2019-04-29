@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     print("Save Model")
 
-    filenameBDT = './'+args.output+'modelBDT_train.pkl'
+    filenameBDT = './OutputModel/'+args.output+'modelBDT_train.pkl'
     _ = joblib.dump(opt[args.opt], filenameBDT, compress=9)
 
     # Plot the two-class decision scores
