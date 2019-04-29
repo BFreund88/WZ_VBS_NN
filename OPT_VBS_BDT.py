@@ -131,11 +131,13 @@ if __name__ == '__main__':
     plt.legend(loc='upper right')
     plt.ylabel('Samples')
     plt.xlabel('Score')
-    plt.title('Decision Scores')
+    #plt.title('Decision Scores')
+    plt.title('')
 
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.35)
     plt.savefig('./ControlPlots/Decision_score_BDT.png')
+    plt.clf()
 
     #Calculate significance in output range between lower and upper
     massindex=0

@@ -197,7 +197,7 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     ax1.bar(bin_centers-bin_widths/2.,Histo_training_S[0],bottom=Histo_training_B[0],
             facecolor='blue',linewidth=0,width=bin_widths,label='S (Train)',alpha=0.5)
  
-    ff = 1.5*(1.0*(sum(Histo_training_S[0])+sum(Histo_training_B[0])))/(1.0*sum(Histo_testing_A[0]))
+    ff = 1.2*(1.0*(sum(Histo_training_S[0])+sum(Histo_training_B[0])))/(1.0*sum(Histo_testing_A[0]))
  
      # # Draw error-bar histograms for the testing data
     ax1.errorbar(bin_centers-bin_widths/2, ff*Histo_testing_A[0], yerr=ff*ErrorBar_testing_A, xerr=None, 
@@ -273,14 +273,18 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
         print '   - AMS based on 90% training   sample:',AMS(s_train,b_train)
         print '   - AMS based on 10% validation sample:',AMS(s_valid,b_valid)
     
-        AMS_train[index2,0]=cut
+        AMS_train[index2,0]=pcutNN
         AMS_train[index2,1]=AMS(s_train,b_train)
-        AMS_valid[index2,0]=cut
+        AMS_valid[index2,0]=pcutNN
         AMS_valid[index2,1]=AMS(s_valid,b_valid)
         index2=index2+1
 
     plt.plot(AMS_train[:,0],AMS_train[:,1], label='train')
     plt.plot(AMS_valid[:,0],AMS_valid[:,1], label='valid')
     plt.legend()
-    plt.title('Significance as a function of the probability output')
+    #plt.title('Significance as a function of the probability output')
+    plt.title('')
+    plt.xlabel("Cut value")
+    plt.ylabel("Significance ($\sigma$)")
     plt.savefig('./ControlPlots/significance_'+str(mod)+'.png')
+    plt.clf()
