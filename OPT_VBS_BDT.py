@@ -129,8 +129,8 @@ if __name__ == '__main__':
 
     plt.axis((x1, x2, y1, y2 * 1.2))
     plt.legend(loc='upper right')
-    plt.ylabel('Samples')
-    plt.xlabel('Score')
+    plt.ylabel('Counts/Bin')
+    Plt.xlabel('BDT output')
     #plt.title('Decision Scores')
     plt.title('')
 

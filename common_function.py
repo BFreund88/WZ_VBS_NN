@@ -197,7 +197,7 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     ax1.bar(bin_centers-bin_widths/2.,Histo_training_S[0],bottom=Histo_training_B[0],
             facecolor='blue',linewidth=0,width=bin_widths,label='S (Train)',alpha=0.5)
  
-    ff = 1.2*(1.0*(sum(Histo_training_S[0])+sum(Histo_training_B[0])))/(1.0*sum(Histo_testing_A[0]))
+    ff = 1.0*(sum(Histo_training_S[0])+sum(Histo_training_B[0]))/(1.0*sum(Histo_testing_A[0]))
  
      # # Draw error-bar histograms for the testing data
     ax1.errorbar(bin_centers-bin_widths/2, ff*Histo_testing_A[0], yerr=ff*ErrorBar_testing_A, xerr=None, 
