@@ -7,6 +7,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras import backend as K
 from keras.optimizers import SGD
 from keras import optimizers
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 import sklearn
 import numpy as np
 import pandas as pd
