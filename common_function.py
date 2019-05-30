@@ -226,7 +226,7 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
     plt.clf() 
 
 
-def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod):
+def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod,name):
     AMS_train=np.zeros(((upper-lower)/step,2))
     AMS_valid=np.zeros(((upper-lower)/step,2))
 
@@ -286,5 +286,5 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
     plt.title('')
     plt.xlabel("Cut value")
     plt.ylabel("Significance ($\sigma$)")
-    plt.savefig('./ControlPlots/significance_'+str(mod)+'.png')
+    plt.savefig('./ControlPlots/significance_'+str(mod)+str(name)+'.png')
     plt.clf()

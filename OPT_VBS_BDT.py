@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser.add_argument('--nest', help = "Specifies the number of estimators in Ensemble", default=400, type=int)
     parser.add_argument('--lr','--learning_rate', help = "Specifies the learning rate", default=0.01, type=float)
     parser.add_argument('--early', help = "Specifies the condition for early stopping for Gradient Boosting Regressor", default=0, type=int)
-    parser.add_argument('--opt', help = "Specifies the optimizer used: AdaBoost:0 and Gradient Boost:1 (default),", default=1, type=int)
+    parser.add_argument('--opt', help = "Specifies the optimizer used: AdaBoost:0 (default) and Gradient Boost:1,", default=0, type=int)
 
     args = parser.parse_args()
     print('Train with hyper parameters:')
@@ -103,12 +103,13 @@ if __name__ == '__main__':
     _ = joblib.dump(opt[args.opt], filenameBDT, compress=9)
 
     # Plot the two-class decision scores
-    plot_colors = "br"
+    plot_colors = "rb"
     plot_step = 0.025
     twoclass_output = opt[args.opt].decision_function(data_set.X_train)
+    test_output =  opt[args.opt].decision_function(data_set.X_valid)
     plot_range = (twoclass_output.min(), twoclass_output.max())
     plt.subplot(111)
-    class_names = "SB"
+    class_names = "BS"
 
     print('Save decision plot')
 
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     plt.axis((x1, x2, y1, y2 * 1.2))
     plt.legend(loc='upper right')
     plt.ylabel('Counts/Bin')
-    Plt.xlabel('BDT output')
+    plt.xlabel('BDT output')
     #plt.title('Decision Scores')
     plt.title('')
 
@@ -152,6 +153,6 @@ if __name__ == '__main__':
     
     print(prob_predict_train_BDT)
 
-    calc_sig(data_set, prob_predict_train_BDT, prob_predict_valid_BDT, lower,upper,step,mass,massindex,'BDT')
+    calc_sig(data_set, prob_predict_train_BDT, prob_predict_valid_BDT, lower,upper,step,mass,massindex,'BDT',args.output)
 
 
