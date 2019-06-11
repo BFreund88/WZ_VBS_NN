@@ -21,7 +21,7 @@ def AMS(s, b):
     n=s+b+br
     radicand = 2 *( n * math.log (n*(b+br+sigma)/(b**2+n*sigma+br))-b**2/sigma*math.log(1+sigma*(n-b)/(b*(b+br+sigma))))
     if radicand < 0:
-        print 'radicand is negative. Exiting'
+        print('radicand is negative. Exiting')
         exit()
     else:
         return math.sqrt(radicand)
@@ -29,7 +29,7 @@ def AMS(s, b):
 def read_data_apply(filepath, X_mean, X_dev, Label, variables):
     data = read_data(filepath)
     data = data.reset_index(drop=True)
-    data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
+    #data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
     X = data[variables]
 
     X= X-X_mean
@@ -48,7 +48,7 @@ def read_data_apply(filepath, X_mean, X_dev, Label, variables):
 def read_data(filename):
     root = ROOT.TFile(filename)
     tree = root.Get('nominal')
-    array = tree2array(tree, selection='m_Valid_jet1==1 && m_Valid_jet2==1 && Mjj>100.')
+    array = tree2array(tree, selection='Jet1Pt>0&&Jet2Pt>0&&M_jj>100.')#'m_Valid_jet1==1 && m_Valid_jet2==1 && Mjj>100.')
     return pd.DataFrame(array)
 
 class dataset:
@@ -63,8 +63,8 @@ class dataset:
         self.y_valid=to_categorical(validation[['Label']])
         #self.y_test=to_categorical(test[['Label']])
 
-        mass_train=train[['Mass']]
-        mass_valid=validation[['Mass']]
+        mass_train=train[['M_WZ']]
+        mass_valid=validation[['M_WZ']]
         #mass_test=test[['Mass']]
 
         self.mass_train=mass_train.reset_index(drop=True)
@@ -115,7 +115,8 @@ def prepare_data(input_samples):
         if bg is None:
             bg=sample
         else:
-            bg=bg.append(sample, sort=True)
+            #Sort not working?
+            bg=bg.append(sample)#, sort=True)
 
     #Add label 0 for bkg
     bg['Label'] = '0'
@@ -136,7 +137,7 @@ def prepare_data(input_samples):
         if sig is None:
             sig=sample
         else:
-            sig=sig.append(sample, sort=True)
+            sig=sig.append(sample)#, sort=True)
     #Probability distribution for random Mass Label
     prob=prob/float(sig.shape[0])
     sig['Label'] = '1'
@@ -149,8 +150,8 @@ def prepare_data(input_samples):
     #Save prob distribution
     np.save('./prob', prob)
     
-    data=bg.append(sig, sort=True)
-    data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
+    data=bg.append(sig)#, sort=True)
+    #data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
     data = data.sample(frac=1,random_state=42).reset_index(drop=True)
     # Pick a random seed for reproducible results
     # Use 30% of the training sample for validation
@@ -161,8 +162,8 @@ def prepare_data(input_samples):
 def drawfigure(model,prob_predict_train_NN,data,X_test):
     pcutNN = np.percentile(prob_predict_train_NN,500/10.)
 
-    Classifier_training_S = model.predict(data.X_train[data.y_train[:,1]==1], verbose=False)[:,1].ravel()
-    Classifier_training_B = model.predict(data.X_train[data.y_train[:,1]==0], verbose=False)[:,1].ravel()
+    Classifier_training_S = model.predict(data.X_train.values[data.y_train[:,1]==1], verbose=False)[:,1].ravel()
+    Classifier_training_B = model.predict(data.X_train.values[data.y_train[:,1]==0], verbose=False)[:,1].ravel()
     Classifier_testing_A = model.predict(X_test, verbose=False)[:,1].ravel()
 
     c_max = max([Classifier_training_S.max(),Classifier_training_B.max(),Classifier_testing_A.max()])
@@ -227,8 +228,8 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
 
 
 def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod,name):
-    AMS_train=np.zeros(((upper-lower)/step,2))
-    AMS_valid=np.zeros(((upper-lower)/step,2))
+    AMS_train=np.zeros((int)((upper-lower)/step,2))
+    AMS_valid=np.zeros((int)((upper-lower)/step,2))
 
     index2=0
 
@@ -239,7 +240,7 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
     num_tot=num_train+num_valid#+num_test
 
     for cut in range(lower,upper, step):
-        print "With upper percentile {}".format(cut)
+        print("With upper percentile {}".format(cut))
         pcutNN = np.percentile(prob_predict_train,cut)
 
 
@@ -262,16 +263,16 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
             elif (Yhat_valid[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
                 b_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
 
-        print "S and B NN training"
-        print s_train
-        print b_train
-        print "S and B NN validation"
-        print s_valid
-        print b_valid
+        print("S and B NN training")
+        print(s_train)
+        print(b_train)
+        print("S and B NN validation")
+        print(s_valid)
+        print(b_valid)
 
-        print 'Calculating AMS score for NNs with a probability cutoff pcut=',cut
-        print '   - AMS based on 90% training   sample:',AMS(s_train,b_train)
-        print '   - AMS based on 10% validation sample:',AMS(s_valid,b_valid)
+        print('Calculating AMS score for NNs with a probability cutoff pcut=',cut)
+        print('   - AMS based on 90% training   sample:',AMS(s_train,b_train))
+        print('   - AMS based on 10% validation sample:',AMS(s_valid,b_valid))
     
         AMS_train[index2,0]=pcutNN
         AMS_train[index2,1]=AMS(s_train,b_train)

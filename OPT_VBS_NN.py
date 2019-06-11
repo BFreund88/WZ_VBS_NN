@@ -8,7 +8,7 @@ from keras import backend as K
 from keras.optimizers import SGD
 from keras import optimizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-import sklearn
+#import sklearn
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -108,8 +108,8 @@ if __name__ == '__main__':
     callbacks=[EarlyStopping(monitor='val_loss', patience=args.patience),ModelCheckpoint(filepath=path, monitor='val_loss', verbose=args.v, save_best_only=True)]
     
     #Train Model
-    logs = model.fit(data_set.X_train, data_set.y_train, epochs=args.epochs,
-                     validation_data=(data_set.X_valid, data_set.y_valid),batch_size=256, callbacks=callbacks, verbose =args.v, class_weight = 'auto')
+    logs = model.fit(data_set.X_train.values, data_set.y_train, epochs=args.epochs,
+                     validation_data=(data_set.X_valid.values, data_set.y_valid),batch_size=256, callbacks=callbacks, verbose =args.v, class_weight = 'auto')
 
     plt.plot(logs.history['acc'], label='train')
     plt.plot(logs.history['val_acc'], label='valid')
@@ -134,12 +134,12 @@ if __name__ == '__main__':
     #Load saved weights which gave best result on training
     model = load_model(path)
 
-    prob_predict_train_NN = model.predict(data_set.X_train, verbose=False)
-    prob_predict_valid_NN = model.predict(data_set.X_valid, verbose=False)
+    prob_predict_train_NN = model.predict(data_set.X_train.values, verbose=False)
+    prob_predict_valid_NN = model.predict(data_set.X_valid.values, verbose=False)
     #prob_predict_test_NN = model.predict(data_set.X_test, verbose=False)
 
     #Draw same figures
-    drawfigure(model,prob_predict_train_NN,data_set,data_set.X_valid)
+    drawfigure(model,prob_predict_train_NN,data_set,data_set.X_valid.values)
 
     #for index in range(200):
     #    print "Label {}".format(data_set.y_train[index,1])
