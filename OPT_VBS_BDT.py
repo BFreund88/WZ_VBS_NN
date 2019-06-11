@@ -23,9 +23,9 @@ def BDTModelada(max_depth, learning_rate, n_estimators, algorithm):
                          algorithm=algorithm)
     return BDTada
 
-def BDTModelgrad(max_depth, learning_rate, n_estimators,verbose,n_iter_no_change):
+def BDTModelgrad(max_depth, learning_rate, n_estimators,verbose):#,n_iter_no_change):
     BDTgrad = GradientBoostingClassifier(verbose=verbose,
-                                         n_iter_no_change=n_iter_no_change,
+                                         #n_iter_no_change=n_iter_no_change,
                                          learning_rate=learning_rate,
                                          n_estimators=n_estimators)
     return BDTgrad
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     #Define Ensemble models with given hyper parameters
     model_ada=BDTModelada(args.depth, args.lr, args.nest, algorithm)
-    model_boost=BDTModelgrad(args.depth, args.lr, args.nest,args.v,args.early)
+    model_boost=BDTModelgrad(args.depth, args.lr, args.nest,args.v)#,args.early)
 
     opt = [model_ada,model_boost]
 

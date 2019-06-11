@@ -7,14 +7,14 @@ source /home/zp/freund/.bashrc
 
 nest=$(( ( ( RANDOM % 20 )  + 1 ) * 100  ))
 depth=$(( ( RANDOM % 5 )  + 1 ))
-lr=$(python -c "import random;print(random.randint(0, 60)*0.001)")
+lr=$(python3 -c "import random;print(random.randint(0, 60)*0.001)")
 opt=0
 
 name=${opt}_${nest}_${depth}_${lr}_
 
 echo "==> Running the BDT Optimisation"
 
-python2 OPT_VBS_BDT.py --v 2 \
+python3 OPT_VBS_BDT.py --v 2 \
     --opt $opt \
     --depth $depth \
     --lr $lr \
