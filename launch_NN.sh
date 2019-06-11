@@ -15,13 +15,13 @@ numlayer=$(( ( RANDOM % 5 )  + 1 ))
 numn=$(( ( ( RANDOM %30 )  + 1 ) * 10 ))
 epochs=200
 
-dropout=$(python -c "import random;print(random.randint(0, 60)*0.01)")
+dropout=$(python3 -c "import random;print(random.randint(0, 60)*0.01)")
 patience=$(( ( RANDOM % 20 )  + 1 )) 
-lrrate=$(python -c "import random;print(random.randint(1, 20)*0.001)")
+lrrate=$(python3 -c "import random;print(random.randint(1, 20)*0.001)")
 
 name=$lrrate_${numlayer}_${numn}_${dropout}_${patience}_
 
-python OPT_VBS_NN.py --v 2 \
+python3 OPT_VBS_NN.py --v 2 \
     --lr $lrrate \
     --epoch $epochs \
     --numn $numn \
