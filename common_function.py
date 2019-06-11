@@ -228,8 +228,8 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
 
 
 def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod,name):
-    AMS_train=np.zeros(int(((upper-lower)/step,2)))
-    AMS_valid=np.zeros(int(((upper-lower)/step,2)))
+    AMS_train=np.zeros((int((upper-lower)/step),2))
+    AMS_valid=np.zeros((int((upper-lower)/step),2))
 
     index2=0
 
