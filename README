@@ -33,39 +33,3 @@ The BDTs are implemented with sklearn. The Hyper parameters are: base_estimator 
 Similar to Apply_NN this program applies the BDT selection to a given dataset. The output variable is
 added to the original ntuple and stored in a new root file.
 
-      INSTALLATION INSTRUCTION:
-
-The program need the following packages installed:
-
-keras
-theano
-root_numpy
-sklearn
-pandas
-matplotlib (for figures)
-
-These can be easily installed with pip (https://pip.pypa.io/en/stable/installing/),
-To download pip:
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-And then to install it:
-python get-pip.py --user
-
-Then you can install keras (https://keras.io/) by:
-pip install keras --user
-
-You will also need to install Theano:
-pip install Theano --user
-
-Once you installed theano you need to change the keras configuration:
-~/.keras/keras.json
-change entry backend to use it with theano:
-       "backend": "theano"
-
-To install sklearn:
-pip install -U scikit-learn --user
-
-To install pandas (for handling the datasets with python):
-pip install pandas --user
-
-For the figures install matplotlib
-pip install -U matplotlib --user
