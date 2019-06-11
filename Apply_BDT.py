@@ -23,8 +23,8 @@ def calculate_pred(model,X):
 def save_file(data, pred, proba, filename):
     data['isSignal'] = pred
     print(filename)
-    for index in range(20):
-        print "Proba {}".format(proba[index,0])
+    #for index in range(20):
+    #    print "Proba {}".format(proba[index,0])
     data['probSignal'] = proba[:,0]
     array2root(np.array(data.to_records()), 'OutputRoot/new_BDT_'+filename, 'nominal', mode='recreate')
     return
