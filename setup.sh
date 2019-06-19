@@ -7,4 +7,5 @@ source /home/zp/freund/.bashrc
        "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt keras" \
        "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt pandas" \
        "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt matplotlib" \
-       "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt h5py"
+       "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt h5py" \
+       "lcgenv -p LCG_92python3 x86_64-slc6-gcc62-opt scikitlearn"

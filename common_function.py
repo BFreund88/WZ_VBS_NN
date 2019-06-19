@@ -39,7 +39,7 @@ def read_data_apply(filepath, X_mean, X_dev, Label, variables,model):
     else:
         if model=='GM':
             prob=np.load('probGM.npy')
-        if model=='HVT':
+        elif model=='HVT':
             prob=np.load('probHVT.npy')
         label=np.random.choice(prob.shape[0],X.shape[0], p=prob)
         X['LabelMass'] = label

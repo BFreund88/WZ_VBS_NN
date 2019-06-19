@@ -104,8 +104,8 @@ if __name__ == '__main__':
     # Plot the two-class decision scores
     plot_colors = "rb"
     plot_step = 0.025
-    twoclass_output = opt[args.opt].decision_function(data_set.X_train)
-    test_output =  opt[args.opt].decision_function(data_set.X_valid)
+    twoclass_output = opt[args.opt].decision_function(data_set.X_train.values)
+    test_output =  opt[args.opt].decision_function(data_set.X_valid.values)
     plot_range = (twoclass_output.min(), twoclass_output.max())
     plt.subplot(111)
     class_names = "BS"
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     print('Save decision plot')
 
     for i, n, c in zip(range(2), class_names, plot_colors):
-        plt.hist(twoclass_output[data_set.y_train[:,1] == i],
+        plt.hist(twoclass_output[data_set.y_train.values == i],
                  bins=20,
                  range=plot_range,
                  facecolor=c,
