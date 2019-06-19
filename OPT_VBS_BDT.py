@@ -14,6 +14,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from common_function import dataset, AMS, read_data, prepare_data, calc_sig
+#For now working with the NN config file
 import config_OPT_NN as conf
 
 def BDTModelada(max_depth, learning_rate, n_estimators, algorithm):

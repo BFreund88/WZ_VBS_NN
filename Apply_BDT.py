@@ -12,7 +12,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from keras.models import model_from_json
 from common_function import read_data_apply
-import config_OPT_BDT as conf
+import config_OPT_NN as conf
 
 def calculate_pred(model,X):
     prob_predict=model.predict_proba(X)

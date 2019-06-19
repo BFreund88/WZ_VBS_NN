@@ -16,19 +16,22 @@ numn=$(( ( ( RANDOM %30 )  + 1 ) * 10 ))
 epochs=200
 
 dropout=$(python3 -c "import random;print(random.randint(0, 60)*0.01)")
+dropoutr=$(printf "%.2f" $dropout)
 patience=$(( ( RANDOM % 20 )  + 1 )) 
-lrrate=$(python3 -c "import random;print(random.randint(1, 20)*0.001)")
+lrrate=$(python3 -c "import random;print(random.randint(5, 30)*0.001)")
+lrrater=$(printf "%.3f" $lrrate)
+model=GM
 
-name=$lrrate_${numlayer}_${numn}_${dropout}_${patience}_
+name=${lrrater}_${numlayer}_${numn}_${dropoutr}_${patience}_
 
 python3 OPT_VBS_NN.py --v 2 \
-    --lr $lrrate \
+    --lr $lrrater \
     --epoch $epochs \
     --numn $numn \
     --numlayer $numlayer \
-    --dropout $dropout \
+    --dropout $dropoutr \
     --patience $patience \
+    --model $model \
     --output $name
-
 
 exit 0

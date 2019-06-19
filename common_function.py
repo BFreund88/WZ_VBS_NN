@@ -26,7 +26,7 @@ def AMS(s, b):
     else:
         return math.sqrt(radicand)
 
-def read_data_apply(filepath, X_mean, X_dev, Label, variables):
+def read_data_apply(filepath, X_mean, X_dev, Label, variables,model):
     data = read_data(filepath)
     data = data.reset_index(drop=True)
     #data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
@@ -37,8 +37,11 @@ def read_data_apply(filepath, X_mean, X_dev, Label, variables):
     if (Label>-1):
         X['LabelMass']=Label
     else:
-        prob=np.load('prob.npy')
-        label=np.random.choice(7,X.shape[0], p=prob)
+        if model=='GM':
+            prob=np.load('probGM.npy')
+        if model=='HVT':
+            prob=np.load('probHVT.npy')
+        label=np.random.choice(prob.shape[0],X.shape[0], p=prob)
         X['LabelMass'] = label
 
     data['LabelMass']=X['LabelMass'] 
@@ -52,15 +55,15 @@ def read_data(filename):
     return pd.DataFrame(array)
 
 class dataset:
-    def __init__(self,data,frac_train,frac_valid,variables):
+    def __init__(self,data,frac_train,frac_valid,variables,model):
         train_full=data.sample(frac=frac_train,random_state=42)
         #test=data.drop(train_full.index)
         train=train_full.sample(frac=frac_valid,random_state=42)
         validation=train_full.drop(train.index)
 
         #Separate variables from labels
-        self.y_train=to_categorical(train[['Label']])
-        self.y_valid=to_categorical(validation[['Label']])
+        self.y_train=train[['Label']]#to_categorical(train[['Label']])
+        self.y_valid=validation[['Label']]#to_categorical(validation[['Label']])
         #self.y_test=to_categorical(test[['Label']])
 
         mass_train=train[['M_WZ']]
@@ -78,9 +81,15 @@ class dataset:
         X_train = train[variables]
         X_valid = validation[variables]
 
-        #Save mean and std dev
-        np.save('./mean', np.mean(X_train))
-        np.save('./std_dev', np.std(X_train))
+        #Save mean and std dev separately for both models
+        if model=='GM':
+            np.save('./meanGM', np.mean(X_train))
+            np.save('./std_devGM', np.std(X_train))
+        elif model=='HVT':
+            np.save('./meanHVT', np.mean(X_train))      
+            np.save('./std_devHVT', np.std(X_train))
+        else :
+            raise NameError('Model needs to be either GM or HVT')
 
         self.X_train= X_train-np.mean(X_train)
         self.X_train= X_train/np.std(X_train)
@@ -98,7 +107,7 @@ class dataset:
         self.mass_valid_label=validation[['LabelMass']]
         #self.X_test['LabelMass']=test[['LabelMass']]
         
-def prepare_data(input_samples):
+def prepare_data(input_samples,model):
     #Read background and signal files and save them as panda data frames
 
     #Names of bck samples
@@ -122,9 +131,17 @@ def prepare_data(input_samples):
     bg['Label'] = '0'
 
     #Read signal
-    namessig = input_samples.sig["name"]
-    xssig = input_samples.sig["xs"]
-    neventssig = input_samples.sig["nevents"]
+    #Either GM or HVT model
+    if model=='GM':
+        namessig = input_samples.sigGM["name"]
+        xssig = input_samples.sigGM["xs"]
+        neventssig = input_samples.sigGM["nevents"]
+    elif model=='HVT':
+        namessig = input_samples.sigHVT["name"]
+        xssig = input_samples.sigHVT["xs"]
+        neventssig = input_samples.sigHVT["nevents"]
+    else :
+        raise NameError('Model needs to be either GM or HVT')
     sig = None
     prob = np.empty(len(namessig))
     print('Read Signal Samples')
@@ -148,26 +165,29 @@ def prepare_data(input_samples):
     bg['LabelMass'] = label
 
     #Save prob distribution
-    np.save('./prob', prob)
-    
+    if model=='GM':
+        np.save('./probGM', prob)
+    elif model=='HVT':
+        np.save('./probHVT', prob)
+
     data=bg.append(sig)#, sort=True)
     #data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
     data = data.sample(frac=1,random_state=42).reset_index(drop=True)
     # Pick a random seed for reproducible results
     # Use 30% of the training sample for validation
 
-    data_cont = dataset(data,1.,input_samples.valfrac,input_samples.variables)
+    data_cont = dataset(data,1.,input_samples.valfrac,input_samples.variables,model)
     return data_cont
 
-def drawfigure(model,prob_predict_train_NN,data,X_test):
+def drawfigure(model,prob_predict_train_NN,data,X_test,modelsig):
     pcutNN = np.percentile(prob_predict_train_NN,500/10.)
 
-    Classifier_training_S = model.predict(data.X_train.values[data.y_train[:,1]==1], verbose=False)[:,1].ravel()
-    Classifier_training_B = model.predict(data.X_train.values[data.y_train[:,1]==0], verbose=False)[:,1].ravel()
-    Classifier_testing_A = model.predict(X_test, verbose=False)[:,1].ravel()
+    Classifier_training_S = model.predict(data.X_train.values[data.y_train.values[:,0]=='1'], verbose=False)
+    Classifier_training_B = model.predict(data.X_train.values[data.y_train.values[:,0]=='0'], verbose=False)
+    Classifier_testing_A = model.predict(X_test, verbose=False)
 
-    c_max = max([Classifier_training_S.max(),Classifier_training_B.max(),Classifier_testing_A.max()])
-    c_min = min([Classifier_training_S.min(),Classifier_training_B.min(),Classifier_testing_A.min()])
+    c_max = max([max(Classifier_training_S),max(Classifier_training_B),max(Classifier_testing_A)])
+    c_min = min([min(Classifier_training_S),min(Classifier_training_B),min(Classifier_testing_A)])
   
     # Get histograms of the classifiers NN
     Histo_training_S = np.histogram(Classifier_training_S,bins=50,range=(c_min,c_max))
@@ -223,13 +243,13 @@ def drawfigure(model,prob_predict_train_NN,data,X_test):
         alabel.set_fontsize('small')
   
     # Save the result to png
-    plt.savefig("./ControlPlots/NN_clf.png")
+    plt.savefig("./ControlPlots/NN_clf_"+modelsig+".png")
     plt.clf() 
 
 
-def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod,name):
-    AMS_train=np.zeros((int((upper-lower)/step),2))
-    AMS_valid=np.zeros((int((upper-lower)/step),2))
+def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,mass,massindex,mod,name,model):
+    AMS_train=np.zeros(((upper-lower)//step,2))
+    AMS_valid=np.zeros(((upper-lower)//step,2))
 
     index2=0
 
@@ -252,15 +272,15 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
         s_valid=b_valid=0
 
         for index in range(len(Yhat_train)):
-            if (Yhat_train[index]==1.0 and data_set.y_train[index,1]==1 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
+            if (Yhat_train[index]==1.0 and data_set.y_train.values[index,0]=='1' and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
                 s_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
-            elif (Yhat_train[index]==1.0 and data_set.y_train[index,1]==0 and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
+            elif (Yhat_train[index]==1.0 and data_set.y_train.values[index,0]=='0' and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
                 b_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
 
         for index in range(len(Yhat_valid)):
-            if (Yhat_valid[index]==1.0 and data_set.y_valid[index,1]==1 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
+            if (Yhat_valid[index]==1.0 and data_set.y_valid.values[index,0]=='1' and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
                 s_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
-            elif (Yhat_valid[index]==1.0 and data_set.y_valid[index,1]==0 and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
+            elif (Yhat_valid[index]==1.0 and data_set.y_valid.values[index,0]=='0' and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
                 b_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
 
         print("S and B NN training")
@@ -287,5 +307,7 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
     plt.title('')
     plt.xlabel("Cut value")
     plt.ylabel("Significance ($\sigma$)")
-    plt.savefig('./ControlPlots/significance_'+str(mod)+str(name)+'.png')
+    plt.savefig('./ControlPlots/significance_'+model+'_'+str(mod)+str(name)+'.png')
     plt.clf()
+    
+    return AMS_valid[np.argmax(AMS_valid[:,1]),1]
