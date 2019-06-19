@@ -93,6 +93,9 @@ if __name__ == '__main__':
     #Load input_sample class from config file
     input_sample=conf.input_samples
 
+    #Additional name from model and hyper parameters
+    nameadd=args.output+args.model
+
     #Read data files
     data_set=prepare_data(input_sample,args.model)
     #Get input dimensions
@@ -125,7 +128,7 @@ if __name__ == '__main__':
     #    f.write(model.to_json())
 
     #Define checkpoint to save best performing NN and early stopping
-    path='./OutputModel/'+args.model+'_'+args.output+'output_NN.h5'
+    path='./OutputModel/'+nameadd+'output_NN.h5'
     #checkpoint=keras.callbacks.ModelCheckpoint(filepath='output_NN.h5', monitor='val_acc', verbose=args.v, save_best_only=True)
     callbacks=[EarlyStopping(monitor='val_loss', patience=args.patience),ModelCheckpoint(filepath=path, monitor='val_loss', verbose=args.v, save_best_only=True)]
     
@@ -139,7 +142,7 @@ if __name__ == '__main__':
     plt.title('')
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
-    plt.savefig('./ControlPlots/class_'+args.output+args.model+'.png')
+    plt.savefig('./ControlPlots/class_'+nameadd+'.png')
     plt.clf()
     plt.plot(logs.history['loss'], label='train')
     plt.plot(logs.history['val_loss'], label='valid')
@@ -149,7 +152,7 @@ if __name__ == '__main__':
     plt.ylabel("Loss")
     plt.title('')
     
-    plt.savefig('./ControlPlots/loss_'+args.output+args.model+'.png')
+    plt.savefig('./ControlPlots/loss_'+nameadd+'.png')
     plt.clf() 
 
     #Calculate Significance
@@ -161,7 +164,7 @@ if __name__ == '__main__':
     #prob_predict_test_NN = model.predict(data_set.X_test, verbose=False)
 
     #Draw same figures
-    drawfigure(model,prob_predict_train_NN,data_set,data_set.X_valid.values,args.model)
+    drawfigure(model,prob_predict_train_NN,data_set,data_set.X_valid.values,nameadd)
 
     #for index in range(200):
     #    print "Label {}".format(data_set.y_train[index,1])

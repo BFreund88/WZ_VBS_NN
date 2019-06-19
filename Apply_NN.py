@@ -24,7 +24,7 @@ def calculate_pred(model,X):
     Yhat=prob_predict[:,0] > pcutNN
     return Yhat, prob_predict
 
-def save_file(data, pred, proba, filename,model):
+def save_file(data, pred, proba, filename, model):
     data['isSignal'] = pred
     print(filename)
     data['probSignal'] = proba[:,0]
@@ -34,7 +34,7 @@ def save_file(data, pred, proba, filename,model):
 def analyze_data(filedir,filename, model, X_mean, X_dev, label, variables, sigmodel):
     data, X = read_data_apply(filedir+filename, X_mean, X_dev, label, variables, sigmodel)
     pred, proba = calculate_pred(model,X)
-    save_file(data, pred, proba, filename,sigmodel)
+    save_file(data, pred, proba, filename, sigmodel)
 
 """Run Trained Neural Network on samples
 Usage:
@@ -43,7 +43,7 @@ Usage:
 Options:
   -h --help             Show this screen.
 Optional arguments
-  --output =input    Specify input name of trained NN
+  --input =<input>    Specify input name of trained NN
   --model =<model> Specify signal model ('HVT' or 'GM')
 """
 

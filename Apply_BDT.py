@@ -20,41 +20,67 @@ def calculate_pred(model,X):
     Yhat=prob_predict[:,0] > pcutNN
     return Yhat, prob_predict
 
-def save_file(data, pred, proba, filename):
+def save_file(data, pred, proba, filename, model):
     data['isSignal'] = pred
     print(filename)
     #for index in range(20):
     #    print "Proba {}".format(proba[index,0])
     data['probSignal'] = proba[:,0]
-    array2root(np.array(data.to_records()), 'OutputRoot/new_BDT_'+filename, 'nominal', mode='recreate')
+    array2root(np.array(data.to_records()), 'OutputRoot/new_BDT_'+model+'_'+filename, 'nominal', mode='recreate')
     return
 
-def analyze_data(filedir,filename,model, X_mean, X_dev, label, variables):
-    data, X = read_data_apply(filedir+filename, X_mean, X_dev, label, variables)
+def analyze_data(filedir,filename, model, X_mean, X_dev, label, variables, sigmodel):
+    data, X = read_data_apply(filedir+filename, X_mean, X_dev, label, variables, sigmodel)
     pred, proba = calculate_pred(model,X)
-    save_file(data, pred, proba, filename)
+    save_file(data, pred, proba, filename, sigmodel)
 
-#Load input_sample class from config file
-input_sample=conf.input_samples
-apply_sample=conf.apply_samples
+"""Run Trained BDT on samples
+Usage:
+  python3 Apply_BDT.py 
+
+Options:
+  -h --help             Show this screen.
+Optional arguments
+  --input =<input>    Specify input name of trained BDT
+  --model =<model> Specify signal model ('HVT' or 'GM')
+"""
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Apply NN on ntuples')
+    parser.add_argument("--input", help="Name of saved trained NN", default='GM_modelBDT_train.pkl', type=str)
+    parser.add_argument("--model", help="Specify Model (HVT or GM)", default='GM', type=str)
+
+    args = parser.parse_args()
+    print(args)
 
 
-#Restores Model and compiles automatically
-model = joblib.load('./OutputModel/modelBDT_train.pkl')
-print(model)
+    #Load input_sample class from config file
+    input_sample=conf.input_samples
+    apply_sample=conf.apply_samples
 
+    #Restores Model and compiles automatically
+    model = joblib.load('./OutputModel/'+args.input)
+    print(model)
 
+    #Load Mean and std dev
+    if args.model=='GM':
+        X_mean = np.load('meanGM.npy')
+        X_dev = np.load('std_devGM.npy')
+    elif args.model=='HVT':
+        X_mean = np.load('meanHVT.npy')
+        X_dev = np.load('std_devHVT.npy')
+    else :
+        raise NameError('Model needs to be either GM or HVT')
 
-#Load Mean and std dev
-X_mean = np.load('mean.npy')
-X_dev = np.load('std_dev.npy')
-
-#Apply NN on all samples in config file
-list_bkg = apply_sample.list_apply_bkg
-list_sig = apply_sample.list_apply_sig
-print('Applying on bkg sample')
-for i in range(len(list_bkg)):
-    analyze_data(apply_sample.filedirbkg,list_bkg[i],model, X_mean, X_dev,-1,input_sample.variables)
-print('Applying on sig sample')
-for i in range(len(list_sig)):
-    analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i+1,input_sample.variables)
+    #Apply NN on all samples in config file
+    list_bkg = apply_sample.list_apply_bkg
+    if args.model=='GM': 
+        list_sig = apply_sample.list_apply_sigGM
+    elif args.model=='HVT':
+        list_sig = apply_sample.list_apply_sigHVT  
+    print('Applying on bkg sample')
+    for i in range(len(list_bkg)):
+        analyze_data(apply_sample.filedirbkg,list_bkg[i],model, X_mean, X_dev,-1,input_sample.variables,args.model)
+    print('Applying on sig sample')
+    for i in range(len(list_sig)):
+        analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i+1,input_sample.variables,args,model)

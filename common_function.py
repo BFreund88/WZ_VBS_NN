@@ -179,7 +179,8 @@ def prepare_data(input_samples,model):
     data_cont = dataset(data,1.,input_samples.valfrac,input_samples.variables,model)
     return data_cont
 
-def drawfigure(model,prob_predict_train_NN,data,X_test,modelsig):
+#Draws Control plot for Neural Network classification
+def drawfigure(model,prob_predict_train_NN,data,X_test,nameadd):
     pcutNN = np.percentile(prob_predict_train_NN,500/10.)
 
     Classifier_training_S = model.predict(data.X_train.values[data.y_train.values[:,0]=='1'], verbose=False)
@@ -243,7 +244,7 @@ def drawfigure(model,prob_predict_train_NN,data,X_test,modelsig):
         alabel.set_fontsize('small')
   
     # Save the result to png
-    plt.savefig("./ControlPlots/NN_clf_"+modelsig+".png")
+    plt.savefig("./ControlPlots/NN_clf_"+nameadd+".png")
     plt.clf() 
 
 

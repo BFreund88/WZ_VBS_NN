@@ -42,6 +42,7 @@ Options:
   -h --help             Show this screen. 
 Optional arguments 
   --output =<output>    Specify output name
+  --model =<model> Specify signal model ('HVT' or 'GM')
   --depth=<depth> Maximal depth of estimators in Ensemble 
   --nest=<nest> Number of estimators in Ensemble 
   --early=<early> Early stopping for Gradient Boosting Regressor
@@ -53,6 +54,7 @@ Optional arguments
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'BDT optimisation')
     parser.add_argument("--v", "--verbose", help="increase output verbosity", default=0, type=int)
+    parser.add_argument("--model", help="Specify Model (HVT or GM)", default='GM', type=str)
     parser.add_argument("--output", help="Specify Output name", default='', type=str)
     parser.add_argument('--depth', help = "Specifies the maximal depth of trees in Ensemble", default=3, type=int)
     parser.add_argument('--nest', help = "Specifies the number of estimators in Ensemble", default=400, type=int)
@@ -68,7 +70,7 @@ if __name__ == '__main__':
     input_sample=conf.input_samples
 
     #Read data files
-    data_set=prepare_data(input_sample)
+    data_set=prepare_data(input_sample,args.model)
 
     algorithm = "SAMME.R"
 
@@ -96,12 +98,8 @@ if __name__ == '__main__':
 
     print("Fit Model")
 
-    opt[args.opt].fit(data_set.X_train, data_set.y_train[:,1].ravel())
+    opt[args.opt].fit(data_set.X_train.values, data_set.y_train.values.ravel())
 
-    print("Save Model")
-
-    filenameBDT = './OutputModel/'+args.output+'modelBDT_train.pkl'
-    _ = joblib.dump(opt[args.opt], filenameBDT, compress=9)
 
     # Plot the two-class decision scores
     plot_colors = "rb"
@@ -138,7 +136,7 @@ if __name__ == '__main__':
 
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.35)
-    plt.savefig('./ControlPlots/Decision_score_BDT.png')
+    plt.savefig('./ControlPlots/Decision_score_BDT'+args.output+args.model+'.png')
     plt.clf()
 
     #Calculate significance in output range between lower and upper
@@ -154,6 +152,9 @@ if __name__ == '__main__':
     
     print(prob_predict_train_BDT)
 
-    calc_sig(data_set, prob_predict_train_BDT, prob_predict_valid_BDT, lower,upper,step,mass,massindex,'BDT',args.output)
+    highsig = calc_sig(data_set, prob_predict_train_BDT, prob_predict_valid_BDT, lower,upper,step,mass,massindex,'BDT',args.output, args.model)
 
+    print("Save Model")
+    filenameBDT = './OutputModel/'+args.model+'_'+str(round(highsig,3))+'_'+args.output+'modelBDT_train.pkl'
+    _ = joblib.dump(opt[args.opt], filenameBDT, compress=9)
 
