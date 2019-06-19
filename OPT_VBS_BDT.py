@@ -147,8 +147,8 @@ if __name__ == '__main__':
     upper=70
     step=2
 
-    prob_predict_train_BDT = opt[args.opt].decision_function(data_set.X_train)
-    prob_predict_valid_BDT = opt[args.opt].decision_function(data_set.X_valid)
+    prob_predict_train_BDT = opt[args.opt].decision_function(data_set.X_train.values)
+    prob_predict_valid_BDT = opt[args.opt].decision_function(data_set.X_valid.values)
     
     print(prob_predict_train_BDT)
 

@@ -1,8 +1,8 @@
 import numpy as np
 class input_samples:
     #Assumed luminosity
-    lumi = 150.
-    #Fraction reserved for testing 
+    lumi = 140.
+    #Fraction used for training 
     valfrac = 0.7
     #Directory where ntuples are located
     filedir = '/lcg/storage15/atlas/freund/ntuples_Miaoran/MVA_final/'
@@ -52,7 +52,7 @@ class input_samples:
                  'Jet1Eta','Jet2Eta','Jet1E','Jet2E',\
                      'Lep1Eta','Lep2Eta', 'Lep3Eta','Lep1Pt', 'Lep2Pt','Lep3Pt','Pt_W',\
                      'Pt_Z','ZetaLep','Njets','Met']
-#No 3rd jet no MET 'MET'
+#No 3rd jet
 #                     'm_Pt_jet3',,'m_Eta_jet3''m_E_jet3',
 
 #Contains list of samples to apply NN
