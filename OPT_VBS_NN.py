@@ -20,15 +20,15 @@ from common_function import dataset, AMS, read_data, prepare_data, drawfigure, c
 import config_OPT_NN as conf
 import ROOT 
 
-def KerasModel(input_dim,numlayer,numn, dropout):
+def KerasModel(input_dim,numlayer,numn, bool_drop, dropout):
     model = Sequential()
     model.add(Dense(numn, input_dim=int(input_dim)))
     model.add(Activation('relu'))
-    model.add(Dropout(dropout))
+    if bool_drop: model.add(Dropout(dropout))
     for i in range(numlayer-1):
         model.add(Dense(numn))
         model.add(Activation('relu'))
-        model.add(Dropout(dropout))
+        if bool_drop: model.add(Dropout(dropout))
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
 
@@ -67,6 +67,7 @@ Optional arguments
   --output =<output>    Specify output name
   --numlayer=<numlayer>     Specify number of hidden layers.
   --numn=<numn> Number of neurons per hidden layer
+  --booldropout=<booldropout> Apply dropout or not 
   --dropout=<dropout> Dropout to reduce overfitting
   --epoch=<epochs> Specify training epochs
   --patience=<patience> Set patience for early stopping
@@ -82,6 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--numlayer', help = "Specifies the number of layers of the Neural Network", default=3, type=int)
     parser.add_argument('--numn', help = "Specifies the number of neurons per hidden layer", default=200, type=int)
     parser.add_argument('--lr','--learning_rate', help = "Specifies the learning rate for SGD optimizer", default=0.01, type=float)
+    parser.add_argument('--booldropout', help = "Applies Dropout or not", default=0, type=bool)
     parser.add_argument('--dropout', help = "Specifies the applied dropout", default=0.05, type=float)
     parser.add_argument('--epochs', help = "Specifies the number of epochs", default=80, type=int)
     parser.add_argument('--patience', help = "Specifies the patience for early stopping", default=5, type=int)
@@ -112,7 +114,7 @@ if __name__ == '__main__':
     print('Number of training: {}, validation: {} and total events: {}.'.format(num_train,num_valid,num_tot))
 
     #Define model with given parameters
-    model=KerasModel(shape_train[1],args.numlayer,args.numn,args.dropout)
+    model=KerasModel(shape_train[1],args.numlayer,args.numn,args.booldropout,args.dropout)
     
     #Possible optimizers
     sgd = optimizers.SGD(lr=args.lr, decay=1e-6, momentum=0.6, nesterov=True)
