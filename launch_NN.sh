@@ -14,7 +14,7 @@ source /home/zp/freund/.bashrc
 numlayer=$(( ( RANDOM % 5 )  + 1 ))
 numn=$(( ( ( RANDOM %30 )  + 1 ) * 10 ))
 epochs=300
-booldrop=$(( ( RANDOM % 1 ) ))
+booldrop=$(( ( RANDOM % 2 ) ))
 
 dropout=$(python3 -c "import random;print(random.randint(0, 60)*0.01)")
 dropoutr=$(printf "%.2f" $dropout)
