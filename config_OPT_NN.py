@@ -23,7 +23,7 @@ class input_samples:
                   'MVA.305029_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_300_qcd0_ntuples.root',
                   'MVA.309501_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m350_ISH0p5_ntuples.root',
                   'MVA.305030_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_400_qcd0_ntuples.root',
-                  'MVA.309498_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m450_ISH0p5_ntuples.root'
+                  'MVA.309498_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m450_ISH0p5_ntuples.root',
                   'MVA.305031_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_500_qcd0_ntuples.root',
                   'MVA.305032_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_600_qcd0_ntuples.root',
                   'MVA.305033_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_700_qcd0_ntuples.root',
@@ -69,7 +69,7 @@ class apply_samples:
                         'MVA.305029_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_300_qcd0_ntuples.root',
                         'MVA.309501_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m350_ISH0p5_ntuples.root',
                         'MVA.305030_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_400_qcd0_ntuples.root',
-                        'MVA.309498_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m450_ISH0p5_ntuples.root'
+                        'MVA.309498_MadGraphPythia8EvtGen_A14NNPDF23LO_VBSWZlvlljj_m450_ISH0p5_ntuples.root',
                         'MVA.305031_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_500_qcd0_ntuples.root',
                         'MVA.305032_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_600_qcd0_ntuples.root',
                         'MVA.305033_MGPy8_A14NNPDF30NLO_VBS_H5p_lvll_700_qcd0_ntuples.root',
