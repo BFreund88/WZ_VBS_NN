@@ -29,7 +29,7 @@ def AMS(s, b):
 def read_data_apply(filepath, X_mean, X_dev, Label, variables,model):
     data = read_data(filepath)
     data = data.reset_index(drop=True)
-    #data.loc[data.m_Valid_jet3 == 0, ['m_Eta_jet3','m_Y_jet3','m_Phi_jet3']] = -10., -10., -5.
+
     X = data[variables]
 
     X= X-X_mean

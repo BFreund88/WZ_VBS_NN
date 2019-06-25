@@ -21,14 +21,15 @@ import config_OPT_NN as conf
 def calculate_pred(model,X):
     prob_predict=model.predict(X.values, verbose=False)
     pcutNN = np.percentile(prob_predict,40.)
-    Yhat=prob_predict[:,0] > pcutNN
+    Yhat=prob_predict[:] > pcutNN
     return Yhat, prob_predict
 
 def save_file(data, pred, proba, filename, model):
     data['isSignal'] = pred
     print(filename)
-    data['probSignal'] = proba[:,0]
+    data['probSignal'] = proba[:]
     array2root(np.array(data.to_records()), 'OutputRoot/new_'+model+'_'+filename, 'nominal', mode='recreate')
+    print('Save file as {}'.format('new_'+model+'_'+filename))
     return
 
 def analyze_data(filedir,filename, model, X_mean, X_dev, label, variables, sigmodel):
@@ -87,4 +88,4 @@ if __name__ == '__main__':
         analyze_data(apply_sample.filedirbkg,list_bkg[i],model, X_mean, X_dev,-1,input_sample.variables,args.model)
     print('Applying on sig sample')
     for i in range(len(list_sig)):
-        analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i+1,input_sample.variables,args.model)
+        analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i,input_sample.variables,args.model)
