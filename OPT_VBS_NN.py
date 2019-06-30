@@ -16,7 +16,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import math
 from root_numpy import root2array, tree2array, array2root
-from common_function import dataset, AMS, read_data, prepare_data, drawfigure, calc_sig
+from common_function import dataset, AMS, read_data, prepare_data, drawfigure, calc_sig, f1, f1_loss
 import config_OPT_NN as conf
 import ROOT 
 
@@ -33,27 +33,6 @@ def KerasModel(input_dim,numlayer,numn, bool_drop, dropout):
     model.add(Activation('sigmoid'))
 
     return model
-
-#Atlernative metric to accuracy
-def f1_score(y_true, y_pred):
-    # Count positive samples.
-    c1 = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    c2 = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    c3 = K.sum(K.round(K.clip(y_true, 0, 1)))
-
-    # If there are no true samples, fix the F1 score at 0.
-    if c3 == 0:
-        return 0
-
-    # How many selected items are relevant?
-    precision = c1 / c2
-
-    # How many relevant items are selected?
-    recall = c1 / c3
-
-    # Calculate f1_score
-    f1_score = 2 * (precision * recall) / (precision + recall)
-    return f1_score
 
 """Neural Network Optimisation
 Usage:
@@ -110,6 +89,8 @@ if __name__ == '__main__':
     #num_test=shape_test[0]
 
     num_tot=num_train+num_valid#+num_test
+
+    #print(data_set.X_train[(data_set.X_train['LabelMass']==0)])
     
     print('Number of training: {}, validation: {} and total events: {}.'.format(num_train,num_valid,num_tot))
 
@@ -121,7 +102,8 @@ if __name__ == '__main__':
     ada= optimizers.Adadelta(lr=1, rho=0.95, epsilon=None, decay=0.01)
     nadam=keras.optimizers.Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, schedule_decay=0.004)
 
-    model.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])#, f1_score])
+    model.compile(loss='binary_crossentropy'#f1_loss
+                  , optimizer=sgd, metrics=['accuracy'])#,f1])
     model.summary()
     #model.save("modelNN_initial_"+args.model+".h5")
 
@@ -159,7 +141,7 @@ if __name__ == '__main__':
 
     #Calculate Significance
     #Load saved weights which gave best result on training
-    model = load_model(path)
+    model = load_model(path)#, custom_objects={'f1': f1, 'f1_loss' : f1_loss})
 
     prob_predict_train_NN = model.predict(data_set.X_train.values, verbose=False)
     prob_predict_valid_NN = model.predict(data_set.X_valid.values, verbose=False)
@@ -168,15 +150,11 @@ if __name__ == '__main__':
     #Draw same figures
     drawfigure(model,prob_predict_train_NN,data_set,data_set.X_valid.values,nameadd)
 
-    #for index in range(200):
-    #    print "Label {}".format(data_set.y_train[index,1])
-    #    print "Proba {}".format(prob_predict_train_NN[index,:])
-
     #Calculate significance in output range between lower and upper
     lower=50
-    upper=80
-    massindex=0
-    mass=200
+    upper=70
+    massindex=2
+    mass=300
     step = 2
     
     highsig = calc_sig(data_set, prob_predict_train_NN[:,0], prob_predict_valid_NN[:,0], lower, upper, step, mass, massindex,'NN', args.output, args.model)

@@ -1,3 +1,4 @@
+import argparse
 import sklearn
 from sklearn.externals import joblib
 from sklearn.ensemble import AdaBoostClassifier
@@ -47,7 +48,7 @@ Optional arguments
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Apply NN on ntuples')
-    parser.add_argument("--input", help="Name of saved trained NN", default='GM_modelBDT_train.pkl', type=str)
+    parser.add_argument("--input", help="Name of saved trained BDT", default='GM_modelBDT_train.pkl', type=str)
     parser.add_argument("--model", help="Specify Model (HVT or GM)", default='GM', type=str)
 
     args = parser.parse_args()
@@ -83,4 +84,4 @@ if __name__ == '__main__':
         analyze_data(apply_sample.filedirbkg,list_bkg[i],model, X_mean, X_dev,-1,input_sample.variables,args.model)
     print('Applying on sig sample')
     for i in range(len(list_sig)):
-        analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i+1,input_sample.variables,args,model)
+        analyze_data(apply_sample.filedirsig,list_sig[i],model, X_mean, X_dev,i,input_sample.variables,args.model)

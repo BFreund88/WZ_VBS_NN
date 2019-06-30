@@ -8,6 +8,8 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import math
+import tensorflow as tf
+from keras import backend as K
 
 def AMS(s, b):
     """ Approximate Median Significance defined as:
@@ -44,7 +46,6 @@ def read_data_apply(filepath, X_mean, X_dev, Label, variables,model):
         label=np.random.choice(prob.shape[0],X.shape[0], p=prob)
         X['LabelMass'] = label
 
-    data['LabelMass']=X['LabelMass'] 
     return data, X
 
 
@@ -273,13 +274,13 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
         s_valid=b_valid=0
 
         for index in range(len(Yhat_train)):
-            if (Yhat_train[index]==1.0 and data_set.y_train.values[index,0]=='1' and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
+            if (Yhat_train[index]==1.0 and data_set.y_train.values[index,0]=='1' and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_train_label.iloc[index,0]==massindex):
                 s_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
             elif (Yhat_train[index]==1.0 and data_set.y_train.values[index,0]=='0' and data_set.mass_train.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_train.iloc[index,0]<mass+mass*0.08*1.5):
                 b_train +=  abs(data_set.W_train.iat[index,0]*(num_tot/float(num_train)))
 
         for index in range(len(Yhat_valid)):
-            if (Yhat_valid[index]==1.0 and data_set.y_valid.values[index,0]=='1' and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
+            if (Yhat_valid[index]==1.0 and data_set.y_valid.values[index,0]=='1' and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5 and data_set.mass_valid_label.iloc[index,0]==massindex):
                 s_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
             elif (Yhat_valid[index]==1.0 and data_set.y_valid.values[index,0]=='0' and data_set.mass_valid.iloc[index,0]>mass-mass*0.08*1.5 and data_set.mass_valid.iloc[index,0]<mass+mass*0.08*1.5):
                 b_valid +=  abs(data_set.W_valid.iat[index,0]*(num_tot/float(num_valid)))
@@ -312,3 +313,33 @@ def calc_sig(data_set,prob_predict_train, prob_predict_valid,lower,upper,step,ma
     plt.clf()
     
     return AMS_valid[np.argmax(AMS_valid[:,1]),1]
+
+#Atlernative metric to accuracy
+def f1(y_true, y_pred):
+    y_pred = K.round(y_pred)
+    tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
+    tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
+    fp = K.sum(K.cast((1-y_true)*y_pred, 'float'), axis=0)
+    fn = K.sum(K.cast(y_true*(1-y_pred), 'float'), axis=0)
+
+    p = tp / (tp + fp + K.epsilon())
+    r = tp / (tp + fn + K.epsilon())
+
+    f1 = 2*p*r / (p+r+K.epsilon())
+    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
+    return K.mean(f1)
+
+def f1_loss(y_true, y_pred):
+    
+    tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
+    tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
+    fp = K.sum(K.cast((1-y_true)*y_pred, 'float'), axis=0)
+    fn = K.sum(K.cast(y_true*(1-y_pred), 'float'), axis=0)
+
+    p = tp / (tp + fp + K.epsilon())
+    r = tp / (tp + fn + K.epsilon())
+
+    f1 = 2*p*r / (p+r+K.epsilon())
+    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
+    return 1 - K.mean(f1)
+

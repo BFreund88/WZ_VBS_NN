@@ -15,7 +15,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from keras.models import model_from_json
-from common_function import read_data_apply, calc_sig, prepare_data
+from common_function import read_data_apply, calc_sig, prepare_data, f1, f1_loss
 import config_OPT_NN as conf
 
 def calculate_pred(model,X):
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     apply_sample=conf.apply_samples
 
     #Restores Model and compiles automatically
-    model = load_model('OutputModel/'+args.input)
+    model = load_model('OutputModel/'+args.input)#, custom_objects={'f1': f1, 'f1_loss' : f1_loss})
     model.summary()
 
     #Load Mean and std dev

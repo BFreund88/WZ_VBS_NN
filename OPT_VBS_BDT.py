@@ -110,10 +110,12 @@ if __name__ == '__main__':
     plt.subplot(111)
     class_names = "BS"
 
+    print(twoclass_output.shape)
+    print(data_set.y_train.values.shape)
     print('Save decision plot')
 
     for i, n, c in zip(range(2), class_names, plot_colors):
-        plt.hist(twoclass_output[data_set.y_train.values == i],
+        plt.hist(twoclass_output[data_set.y_train.values[:,0] == i],
                  bins=20,
                  range=plot_range,
                  facecolor=c,
